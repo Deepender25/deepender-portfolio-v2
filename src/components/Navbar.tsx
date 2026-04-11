@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from 'motion/react';
 import { Menu, X } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { navigate } from '../utils/navigation';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -13,10 +14,10 @@ export default function Navbar() {
   }, []);
 
   const navLinks = [
-    { name: 'About', href: '#about' },
-    { name: 'Skills', href: '#skills' },
-    { name: 'Experience', href: '#experience' },
-    { name: 'Projects', href: '#projects' },
+    { name: 'About', path: '/about', id: 'about' },
+    { name: 'Skills', path: '/skills', id: 'skills' },
+    { name: 'Experience', path: '/experience', id: 'experience' },
+    { name: 'Projects', path: '/projects', id: 'projects' },
   ];
 
   return (
@@ -36,20 +37,32 @@ export default function Navbar() {
           {navLinks.map((link) => (
             <a
               key={link.name}
-              href={link.href}
+              href={link.path}
+              onClick={(e) => {
+                e.preventDefault();
+                navigate(link.path, link.id);
+              }}
               className="text-sm font-medium text-white/60 hover:text-white transition-colors"
             >
               {link.name}
             </a>
           ))}
           <a
-            href="#contact"
+            href="/contact"
+            onClick={(e) => {
+              e.preventDefault();
+              navigate('/contact', 'contact');
+            }}
             className="text-xs font-mono uppercase tracking-widest border border-white/20 bg-white/5 text-white rounded-full px-5 py-2.5 hover:bg-white hover:text-black transition-all duration-300 hover:scale-105 active:scale-95"
           >
             Contact
           </a>
           <a
-            href="#resume"
+            href="/resume"
+            onClick={(e) => {
+              e.preventDefault();
+              navigate('/resume');
+            }}
             className="text-xs font-mono uppercase tracking-widest border border-white/20 bg-white/10 text-white rounded-full px-5 py-2.5 hover:bg-white hover:text-black transition-all duration-300 hover:scale-105 active:scale-95"
           >
             Resume
@@ -74,8 +87,12 @@ export default function Navbar() {
             {navLinks.map((link) => (
               <a
                 key={link.name}
-                href={link.href}
-                onClick={() => setIsOpen(false)}
+                href={link.path}
+                onClick={(e) => {
+                  e.preventDefault();
+                  setIsOpen(false);
+                  navigate(link.path, link.id);
+                }}
                 className="text-lg font-display font-medium text-white/80 hover:text-white"
               >
                 {link.name}
@@ -83,15 +100,23 @@ export default function Navbar() {
             ))}
             <div className="flex flex-col gap-3 mt-2">
               <a
-                href="#contact"
-                onClick={() => setIsOpen(false)}
+                href="/contact"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setIsOpen(false);
+                  navigate('/contact', 'contact');
+                }}
                 className="text-center text-sm font-mono uppercase tracking-widest border border-white/20 bg-white/5 text-white rounded-full px-5 py-3 hover:bg-white hover:text-black transition-all duration-300 hover:scale-105 active:scale-95"
               >
                 Contact Me
               </a>
               <a
-                href="#resume"
-                onClick={() => setIsOpen(false)}
+                href="/resume"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setIsOpen(false);
+                  navigate('/resume');
+                }}
                 className="text-center text-sm font-mono uppercase tracking-widest border border-white/20 bg-white/10 text-white rounded-full px-5 py-3 hover:bg-white hover:text-black transition-all duration-300 hover:scale-105 active:scale-95"
               >
                 Resume

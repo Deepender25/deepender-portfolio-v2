@@ -4,6 +4,7 @@
  */
 
 import { useState, useEffect } from 'react';
+import { navigate } from './utils/navigation';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import About from './components/About';
@@ -19,25 +20,33 @@ export default function App() {
   const [isResumeOpen, setIsResumeOpen] = useState(false);
 
   useEffect(() => {
-    const handleHashChange = () => {
-      if (window.location.hash === '#resume') {
+    const handleLocationChange = () => {
+      if (window.location.pathname === '/resume') {
         setIsResumeOpen(true);
       } else {
         setIsResumeOpen(false);
       }
     };
 
-    // Check initial hash
-    handleHashChange();
+    // Check initial path
+    handleLocationChange();
 
-    window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
+    // Check if initial load requires scrolling
+    const path = window.location.pathname;
+    const sectionId = path.substring(1);
+    if (['about', 'skills', 'experience', 'projects', 'contact'].includes(sectionId)) {
+      setTimeout(() => {
+        document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth' });
+      }, 500);
+    }
+
+    window.addEventListener('popstate', handleLocationChange);
+    return () => window.removeEventListener('popstate', handleLocationChange);
   }, []);
 
   const closeResume = () => {
     setIsResumeOpen(false);
-    // Remove the hash without scrolling to the top
-    window.history.pushState("", document.title, window.location.pathname + window.location.search);
+    navigate('/');
   };
 
   return (
