@@ -1,11 +1,24 @@
 import express from 'express';
 import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
+import rateLimit from 'express-rate-limit';
 
 dotenv.config();
 
 const app = express();
+app.set('trust proxy', 1); // important for rate-limiting when behind proxies like Vercel/Render
 app.use(express.json());
+
+// Apply rate limiting to contact endpoint (max 3 emails per 15 mins per IP)
+const contactLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 3, // Limit each IP to 3 requests per `window`
+  message: { error: 'Too many requests sent. Please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+app.use('/api/contact', contactLimiter);
 
 // POST /api/contact
 app.post('/api/contact', async (req, res) => {
@@ -65,7 +78,11 @@ app.post('/api/contact', async (req, res) => {
   }
 });
 
-const PORT = process.env.SERVER_PORT || 3001;
-app.listen(PORT, () => {
-  console.log(`✅ API server running on http://localhost:${PORT}`);
-});
+if (process.env.NODE_ENV !== 'production') {
+  const PORT = process.env.SERVER_PORT || 3001;
+  app.listen(PORT, () => {
+    console.log(`✅ API server running on http://localhost:${PORT}`);
+  });
+}
+
+export default app;
