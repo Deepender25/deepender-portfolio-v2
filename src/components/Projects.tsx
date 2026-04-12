@@ -12,7 +12,7 @@ const featuredProjects = [
   },
   {
     title: "Campus Chatbot",
-    description: "AI-powered multilingual chatbot (English & Hindi) for campus information. Features Gemini LLM, dynamic knowledge base, Telegram/web interfaces, and a secure admin dashboard.",
+    description: "AI-powered multilingual chatbot (Multilingual) for campus information. Features Gemini LLM, dynamic knowledge base, Telegram/web interfaces, and a secure admin dashboard.",
     tech: ["Next.js", "React", "Flask", "Python", "Supabase", "ChromaDB", "Gemini API", "LangChain"],
     github: "https://github.com/Deepender25/Campus_Chatbot",
     live: "#",
@@ -88,7 +88,7 @@ export default function Projects() {
           View all on GitHub <ArrowRight size={14} />
         </a>
       </div>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
         {featuredProjects.map((project, index) => {
           const Icon = project.icon;
@@ -119,12 +119,12 @@ export default function Projects() {
                   )}
                 </div>
               </div>
-              
+
               <h3 className="text-2xl font-display font-medium tracking-tight mb-4">{project.title}</h3>
               <p className="text-white/60 font-light leading-relaxed mb-8 text-sm flex-grow">
                 {project.description}
               </p>
-              
+
               <div className="flex flex-wrap gap-2 mt-auto">
                 {project.tech.map((tech, i) => (
                   <span key={i} className="text-[10px] font-mono text-white/50 bg-white/5 border border-white/5 px-3 py-1.5 rounded-full uppercase tracking-wider">
