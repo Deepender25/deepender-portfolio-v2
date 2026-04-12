@@ -1,6 +1,6 @@
 import { motion } from 'motion/react';
 import { ArrowRight, CheckCircle2, Github, Linkedin, Mail, Phone, XCircle } from 'lucide-react';
-import { useState } from 'react';
+import React, { useState } from 'react';
 
 interface FormState {
   name: string;
