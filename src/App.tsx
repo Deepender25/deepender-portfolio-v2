@@ -19,6 +19,7 @@ import ResumeModal from './components/ResumeModal';
 
 export default function App() {
   const envBgType = import.meta.env.VITE_BACKGROUND_TYPE || '0';
+  const envBgCycleMins = parseInt(import.meta.env.VITE_BACKGROUND_CYCLE_MINUTES || '10', 10);
   const [isResumeOpen, setIsResumeOpen] = useState(false);
   const [bgCycle, setBgCycle] = useState(0);
 
@@ -26,11 +27,11 @@ export default function App() {
     if (envBgType === '0-1') {
       const interval = setInterval(() => {
         setBgCycle(prev => (prev === 0 ? 1 : 0));
-      }, 30 * 60 * 1000); // 30 minutes in milliseconds
+      }, envBgCycleMins * 60 * 1000);
       
       return () => clearInterval(interval);
     }
-  }, [envBgType]);
+  }, [envBgType, envBgCycleMins]);
 
   const activeBg = envBgType === '0-1' ? bgCycle.toString() : envBgType;
 
