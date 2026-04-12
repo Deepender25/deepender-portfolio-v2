@@ -70,23 +70,23 @@ export default function Contact() {
             </p>
 
             <div className="flex flex-col gap-6">
-              <a href="mailto:yadavdeepender65@gmail.com" className="flex items-center gap-4 text-white/80 hover:text-white transition-colors group w-fit">
-                <div className="w-12 h-12 rounded-full glass-panel flex items-center justify-center group-hover:bg-white group-hover:text-black transition-all">
+              <a href="mailto:yadavdeepender65@gmail.com" className="flex items-center gap-3 md:gap-4 text-white/80 hover:text-white transition-colors group w-full md:w-fit">
+                <div className="shrink-0 w-10 h-10 md:w-12 md:h-12 rounded-full glass-panel flex items-center justify-center group-hover:bg-white group-hover:text-black transition-all">
                   <Mail size={18} />
                 </div>
-                <span className="font-light text-lg">yadavdeepender65@gmail.com</span>
+                <span className="font-light text-sm md:text-lg break-all md:break-normal">yadavdeepender65@gmail.com</span>
               </a>
-              <a href="tel:+917015878120" className="flex items-center gap-4 text-white/80 hover:text-white transition-colors group w-fit">
-                <div className="w-12 h-12 rounded-full glass-panel flex items-center justify-center group-hover:bg-white group-hover:text-black transition-all">
+              <a href="tel:+917015878120" className="flex items-center gap-3 md:gap-4 text-white/80 hover:text-white transition-colors group w-full md:w-fit">
+                <div className="shrink-0 w-10 h-10 md:w-12 md:h-12 rounded-full glass-panel flex items-center justify-center group-hover:bg-white group-hover:text-black transition-all">
                   <Phone size={18} />
                 </div>
-                <span className="font-light text-lg">+91 7015878120</span>
+                <span className="font-light text-sm md:text-lg break-all md:break-normal">+91 7015878120</span>
               </a>
-              <a href="https://www.linkedin.com/in/deepender25/" target="_blank" rel="noreferrer" className="flex items-center gap-4 text-white/80 hover:text-white transition-colors group w-fit">
-                <div className="w-12 h-12 rounded-full glass-panel flex items-center justify-center group-hover:bg-white group-hover:text-black transition-all">
+              <a href="https://www.linkedin.com/in/deepender25/" target="_blank" rel="noreferrer" className="flex items-center gap-3 md:gap-4 text-white/80 hover:text-white transition-colors group w-full md:w-fit">
+                <div className="shrink-0 w-10 h-10 md:w-12 md:h-12 rounded-full glass-panel flex items-center justify-center group-hover:bg-white group-hover:text-black transition-all">
                   <Linkedin size={18} />
                 </div>
-                <span className="font-light text-lg">linkedin.com/in/deepender25</span>
+                <span className="font-light text-sm md:text-lg break-all md:break-normal">linkedin.com/in/deepender25</span>
               </a>
             </div>
           </div>
