@@ -14,10 +14,25 @@ import Skills from './components/Skills';
 import Contact from './components/Contact';
 import Footer from './components/Footer';
 import { EtheralShadow } from './components/ui/etheral-shadow';
+import { Waves } from './components/ui/wave-background';
 import ResumeModal from './components/ResumeModal';
 
 export default function App() {
+  const envBgType = import.meta.env.VITE_BACKGROUND_TYPE || '0';
   const [isResumeOpen, setIsResumeOpen] = useState(false);
+  const [bgCycle, setBgCycle] = useState(0);
+
+  useEffect(() => {
+    if (envBgType === '0-1') {
+      const interval = setInterval(() => {
+        setBgCycle(prev => (prev === 0 ? 1 : 0));
+      }, 30 * 60 * 1000); // 30 minutes in milliseconds
+      
+      return () => clearInterval(interval);
+    }
+  }, [envBgType]);
+
+  const activeBg = envBgType === '0-1' ? bgCycle.toString() : envBgType;
 
   useEffect(() => {
     const handleLocationChange = () => {
@@ -69,14 +84,18 @@ export default function App() {
         <div className="absolute top-[40%] left-[30%] w-[30vw] h-[30vw] rounded-full bg-gray-300/15 blur-[100px] animate-blob animation-delay-4000" />
       </div>
 
-      {/* Ethereal Shadow Background */}
-      <div className="fixed inset-0 z-0 pointer-events-none transform-gpu">
-        <EtheralShadow
-          color="rgba(255, 255, 255, 0.15)"
-          animation={{ scale: 100, speed: 90 }}
-          noise={{ opacity: 0.8, scale: 1.2 }}
-          sizing="stretch"
-        />
+      {/* Dynamic Background Toggle */}
+      <div className="fixed inset-0 z-0 pointer-events-none transform-gpu transition-opacity duration-1000">
+        {activeBg === '1' ? (
+          <Waves className="h-full w-full" strokeColor="rgba(255, 255, 255, 0.3)" />
+        ) : (
+          <EtheralShadow
+            color="rgba(255, 255, 255, 0.15)"
+            animation={{ scale: 100, speed: 90 }}
+            noise={{ opacity: 0.8, scale: 1.2 }}
+            sizing="stretch"
+          />
+        )}
       </div>
       
       {/* Matted Noise Texture (Keeping the subtle SVG noise for extra frosted feel) */}
