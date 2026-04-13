@@ -16,6 +16,7 @@ import Footer from './components/Footer';
 import { EtheralShadow } from './components/ui/etheral-shadow';
 import { Waves } from './components/ui/wave-background';
 import ResumeModal from './components/ResumeModal';
+import HangingIdCard from './components/HangingIdCard';
 
 export default function App() {
   const envBgType = import.meta.env.VITE_BACKGROUND_TYPE || '0';
@@ -69,6 +70,8 @@ export default function App() {
     <div className="relative min-h-screen text-white font-sans selection:bg-white/20 selection:text-white overflow-x-hidden">
       <ResumeModal isOpen={isResumeOpen} onClose={closeResume} />
       
+      <HangingIdCard />
+
       {/* Top Edge Hard-to-Soft Blur Gradient */}
       <div 
         className="fixed top-0 left-0 right-0 h-40 z-40 pointer-events-none backdrop-blur-2xl transform-gpu"
