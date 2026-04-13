@@ -37,6 +37,13 @@ export default function App() {
   const activeBg = envBgType === '0-1' ? bgCycle.toString() : envBgType;
 
   useEffect(() => {
+    // If the user reloads the page via the browser, redirect to the home page
+    const navEntries = performance.getEntriesByType('navigation') as PerformanceNavigationTiming[];
+    if (navEntries.length > 0 && navEntries[0].type === 'reload') {
+      window.location.href = '/';
+      return;
+    }
+
     const handleLocationChange = () => {
       if (window.location.pathname === '/resume') {
         setIsResumeOpen(true);

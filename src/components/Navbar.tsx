@@ -28,7 +28,14 @@ export default function Navbar() {
       className="fixed top-6 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none"
     >
       <div className="glass-pill rounded-full px-6 py-3 flex items-center justify-between gap-8 md:gap-12 pointer-events-auto w-full max-w-fit">
-        <a href="#" className="text-xl font-display font-bold tracking-tighter">
+        <a 
+          href="/" 
+          onClick={(e) => { 
+            e.preventDefault(); 
+            window.location.href = '/'; 
+          }} 
+          className="text-xl font-display font-bold tracking-tighter"
+        >
           DY<span className="text-white/50">.</span>
         </a>
 
