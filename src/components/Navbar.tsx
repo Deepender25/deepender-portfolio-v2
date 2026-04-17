@@ -26,6 +26,7 @@ export default function Navbar() {
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
       className="fixed top-6 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none"
+      style={{ willChange: "transform, opacity" }}
     >
       <div className="glass-pill rounded-full px-6 py-3 flex items-center justify-between gap-8 md:gap-12 pointer-events-auto w-full max-w-fit">
         <a 
@@ -90,6 +91,7 @@ export default function Navbar() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -20, scale: 0.95 }}
             className="absolute top-20 left-4 right-4 glass-panel-strong rounded-2xl p-6 flex flex-col gap-6 md:hidden pointer-events-auto"
+            style={{ willChange: "transform, opacity" }}
           >
             {navLinks.map((link) => (
               <a

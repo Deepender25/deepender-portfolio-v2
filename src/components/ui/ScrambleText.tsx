@@ -10,43 +10,52 @@ interface ScrambleTextProps {
 const CHARS = 'abcdefghijklmnopqrstuvwxyz+-_~|/\\';
 
 export function ScrambleText({ text, delay = 0, className = "" }: ScrambleTextProps) {
-  // Start with a blank string or scrambled string of the same length
+  // Start with a blank string of the same length
   const [displayText, setDisplayText] = useState(text.replace(/./g, ' '));
 
   useEffect(() => {
-    let timeoutId: NodeJS.Timeout;
-    let intervalId: NodeJS.Timeout;
+    let rafId: number;
+    let startTimestamp: number | null = null;
+    let delayDone = false;
 
-    timeoutId = setTimeout(() => {
-      let iteration = 0;
-      
-      intervalId = setInterval(() => {
-        setDisplayText(() => {
-          return text
-            .split('')
-            .map((char, index) => {
-              if (char === ' ') return ' ';
-              if (index < iteration) {
-                return text[index];
-              }
-              return CHARS[Math.floor(Math.random() * CHARS.length)];
-            })
-            .join('');
-        });
+    // How long (ms) the full scramble takes after delay
+    const DURATION = text.length * 45 * (1 / (1 / 3)); // matches old logic: iteration += 1/3 every 45ms
+    const TOTAL_FRAMES_EQUIV = text.length / (1 / 3); // total iterations until done
 
-        if (iteration >= text.length) {
-          clearInterval(intervalId);
-          setDisplayText(text); // Ensure final text is exact
-        }
-        
-        // Faster progression (1/3) to complete the animation in ~1.2s
-        iteration += 1 / 3; 
-      }, 45); // Slightly slower update frequency (was 30ms)
-    }, delay);
+    const animate = (timestamp: number) => {
+      if (startTimestamp === null) startTimestamp = timestamp;
+      const elapsed = timestamp - startTimestamp;
+
+      if (!delayDone && elapsed < delay) {
+        rafId = requestAnimationFrame(animate);
+        return;
+      }
+      delayDone = true;
+
+      // Map elapsed time (after delay) to iteration progress
+      const animElapsed = elapsed - delay;
+      const iteration = Math.min((animElapsed / 45) * (1 / 3), text.length);
+
+      setDisplayText(
+        text.split('').map((char, index) => {
+          if (char === ' ') return ' ';
+          if (index < iteration) return text[index];
+          return CHARS[Math.floor(Math.random() * CHARS.length)];
+        }).join('')
+      );
+
+      if (iteration < text.length) {
+        rafId = requestAnimationFrame(animate);
+      } else {
+        setDisplayText(text); // ensure exact final text
+      }
+    };
+
+    // Use a small delay via rAF timestamp comparison rather than setTimeout
+    rafId = requestAnimationFrame(animate);
 
     return () => {
-      clearTimeout(timeoutId);
-      clearInterval(intervalId);
+      cancelAnimationFrame(rafId);
     };
   }, [text, delay]);
 

@@ -39,6 +39,7 @@ export default function Experience() {
             viewport={{ once: true, margin: "-100px" }}
             transition={{ duration: 0.6, delay: index * 0.1, ease: [0.16, 1, 0.3, 1] }}
             className="glass-panel p-8 md:p-10 rounded-3xl relative overflow-hidden group"
+            style={{ willChange: "transform, opacity" }}
           >
             <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
               <div>

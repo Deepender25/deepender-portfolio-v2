@@ -9,6 +9,7 @@ export default function About() {
         viewport={{ once: true, margin: "-100px" }}
         transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
         className="glass-panel-strong rounded-[2rem] p-8 md:p-16 relative overflow-hidden"
+        style={{ willChange: "transform, opacity" }}
       >
         {/* Decorative blur inside card */}
         <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2" />

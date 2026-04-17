@@ -37,6 +37,7 @@ export default function ResumeModal({ isOpen, onClose }: ResumeModalProps) {
             exit={{ opacity: 0 }}
             onClick={onClose}
             className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            style={{ willChange: "opacity" }}
           />
 
           {/* Modal Panel */}
@@ -45,6 +46,7 @@ export default function ResumeModal({ isOpen, onClose }: ResumeModalProps) {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             className="relative w-full max-w-5xl h-[88vh] glass-panel-strong rounded-2xl overflow-hidden flex flex-col"
+            style={{ willChange: "transform, opacity" }}
           >
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-white/10 bg-white/5 shrink-0">

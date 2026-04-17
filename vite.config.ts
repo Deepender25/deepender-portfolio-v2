@@ -15,6 +15,19 @@ export default defineConfig(({mode}) => {
         '@': path.resolve(__dirname, '.'),
       },
     },
+    build: {
+      cssCodeSplit: true,
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            // Split heavy deps into their own cached chunks
+            'vendor-react': ['react', 'react-dom'],
+            'vendor-motion': ['motion'],
+            'vendor-pdf': ['react-pdf'],
+          },
+        },
+      },
+    },
     server: {
       // HMR is disabled in AI Studio via DISABLE_HMR env var.
       // Do not modify—file watching is disabled to prevent flickering during agent edits.

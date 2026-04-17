@@ -47,6 +47,9 @@ export function Waves({
     const noiseRef = useRef<((x: number, y: number) => number) | null>(null)  // 替换any为具体的函数类型
     const rafRef = useRef<number | null>(null)
     const boundingRef = useRef<DOMRect | null>(null)
+    const frameCountRef = useRef(0)
+    const resizeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+    const isMobileRef = useRef(window.innerWidth < 768)
 
     // Initialization
     useEffect(() => {
@@ -60,17 +63,29 @@ export function Waves({
         setLines()
 
         // Bind events
-        window.addEventListener('resize', onResize)
-        window.addEventListener('mousemove', onMouseMove)
+        window.addEventListener('resize', onResize, { passive: true })
+        window.addEventListener('mousemove', onMouseMove, { passive: true })
         containerRef.current.addEventListener('touchmove', onTouchMove, { passive: false })
+
+        // Pause animation when tab is hidden for battery savings
+        const handleVisibility = () => {
+            if (document.hidden) {
+                if (rafRef.current) cancelAnimationFrame(rafRef.current)
+            } else {
+                rafRef.current = requestAnimationFrame(tick)
+            }
+        }
+        document.addEventListener('visibilitychange', handleVisibility)
 
         // Start animation
         rafRef.current = requestAnimationFrame(tick)
 
         return () => {
             if (rafRef.current) cancelAnimationFrame(rafRef.current)
+            if (resizeTimerRef.current) clearTimeout(resizeTimerRef.current)
             window.removeEventListener('resize', onResize)
             window.removeEventListener('mousemove', onMouseMove)
+            document.removeEventListener('visibilitychange', handleVisibility)
             containerRef.current?.removeEventListener('touchmove', onTouchMove)
         }
     }, [])
@@ -99,9 +114,10 @@ export function Waves({
         })
         pathsRef.current = []
 
-        // Use smaller spacing to generate more lines and points for smoother results
-        const xGap = 8  // Reduced horizontal spacing
-        const yGap = 8  // Reduced vertical spacing for denser points
+        // Use responsive spacing to optimize performance on mobile
+        const isMobile = window.innerWidth < 768;
+        const xGap = isMobile ? 20 : 12;  // Optimize horizontal spacing
+        const yGap = isMobile ? 20 : 12;  // Optimize vertical spacing
 
         const oWidth = width + 200
         const oHeight = height + 30
@@ -146,10 +162,14 @@ export function Waves({
         }
     }
 
-    // Resize handler
+    // Resize handler — debounced to avoid thrashing on every pixel of resize
     const onResize = () => {
-        setSize()
-        setLines()
+        isMobileRef.current = window.innerWidth < 768
+        if (resizeTimerRef.current) clearTimeout(resizeTimerRef.current)
+        resizeTimerRef.current = setTimeout(() => {
+            setSize()
+            setLines()
+        }, 150)
     }
 
     // Mouse handler
@@ -268,8 +288,13 @@ export function Waves({
         })
     }
 
-    // Animation logic
+    // Animation logic — skips every other frame on mobile to reduce CPU load
     const tick = (time: number) => {
+        frameCountRef.current++
+
+        // On mobile, only fully process every 2nd frame (still smooth at ~30fps)
+        const skipFrame = isMobileRef.current && frameCountRef.current % 2 !== 0
+
         const { current: mouse } = mouseRef
 
         // Smooth mouse movement
@@ -298,8 +323,10 @@ export function Waves({
             containerRef.current.style.setProperty('--y', `${mouse.sy}px`)
         }
 
-        movePoints(time)
-        drawLines()
+        if (!skipFrame) {
+            movePoints(time)
+            drawLines()
+        }
 
         rafRef.current = requestAnimationFrame(tick)
     }
@@ -326,6 +353,7 @@ export function Waves({
                 ref={svgRef}
                 className="block w-full h-full js-svg"
                 xmlns="http://www.w3.org/2000/svg"
+                style={{ transform: 'translateZ(0)', willChange: 'contents' }}
             />
             <div
                 className="pointer-dot"

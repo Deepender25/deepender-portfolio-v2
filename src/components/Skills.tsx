@@ -45,6 +45,7 @@ export default function Skills() {
             viewport={{ once: true, margin: "-50px" }}
             transition={{ duration: 0.6, delay: index * 0.1, ease: [0.16, 1, 0.3, 1] }}
             className={`glass-panel p-8 rounded-3xl hover:bg-white/[0.04] transition-colors ${category.className}`}
+            style={{ willChange: "transform, opacity" }}
           >
             <h4 className="text-xs font-mono text-white/40 uppercase tracking-widest mb-6">
               {category.title}

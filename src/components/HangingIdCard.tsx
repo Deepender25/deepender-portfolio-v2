@@ -46,13 +46,14 @@ export default function HangingIdCard() {
       animate={{ y: 0 }}
       transition={{ type: 'spring', bounce: 0.4, duration: 1.5, delay: 0.2 }}
       className="absolute top-12 right-32 xl:right-56 w-56 h-[600px] pointer-events-none hidden lg:block z-30"
+      style={{ willChange: 'transform' }}
     >
       {/* Subtle idle sway — kept OUTSIDE the drag layer so it doesn't shift
           the coordinate origin that the lanyard math uses */}
       <motion.div
         animate={{ rotate: [-2, 2, -2], y: [0, -12, 0] }}
         transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
-        style={{ transformOrigin: 'top center', width: '100%', height: '100%' }}
+        style={{ transformOrigin: 'top center', width: '100%', height: '100%', willChange: 'transform' }}
       >
         {/* ── Lanyard SVG ── drawn BEHIND the card (lower z) ── */}
         <svg
@@ -87,6 +88,7 @@ export default function HangingIdCard() {
             y: springY,
             rotate,
             transformOrigin: `50% ${HOLE_FROM_CARD_TOP}px`,
+            willChange: 'transform'
           }}
           drag
           _dragX={dragX}
@@ -105,6 +107,7 @@ export default function HangingIdCard() {
             <img
               src="/Deepender.jpg"
               alt="Deepender"
+              decoding="async"
               className="w-full h-full object-cover object-top rounded-full scale-[1.1] -translate-y-1.5"
             />
           </div>

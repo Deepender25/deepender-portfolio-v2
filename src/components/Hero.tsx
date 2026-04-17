@@ -17,6 +17,7 @@ export default function Hero() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
               className="inline-flex items-center gap-3 glass-panel px-4 py-2 rounded-full mb-8"
+              style={{ willChange: "transform, opacity" }}
             >
               <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
               <p className="font-mono text-xs text-white/80 uppercase tracking-widest">
@@ -28,6 +29,7 @@ export default function Hero() {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+              style={{ willChange: "transform, opacity" }}
             >
               <h1 className="text-5xl md:text-7xl lg:text-[7rem] font-display font-medium tracking-tighter leading-[1.05]">
                 <ScrambleText text="Deepender" delay={300} className="text-gradient" />
@@ -42,6 +44,7 @@ export default function Hero() {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.8, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
                   className="flex flex-wrap items-center gap-4 mt-4 md:mt-0"
+                  style={{ willChange: "transform, opacity" }}
                 >
                   <a
                     href="#projects"
@@ -79,6 +82,7 @@ export default function Hero() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
           className="w-full glass-panel p-8 md:p-12 rounded-[2rem] relative overflow-hidden"
+          style={{ willChange: "transform, opacity" }}
         >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16">
             <p className="text-xl md:text-2xl text-white/80 font-light leading-relaxed">

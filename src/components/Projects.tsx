@@ -101,6 +101,7 @@ export default function Projects() {
               transition={{ duration: 0.6, delay: (index % 3) * 0.1, ease: [0.16, 1, 0.3, 1] }}
               whileHover={{ y: -8, scale: 1.01 }}
               className="glass-panel p-8 rounded-3xl flex flex-col h-full group"
+              style={{ willChange: "transform, opacity" }}
             >
               <div className="flex justify-between items-start mb-8">
                 <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center border border-white/10 group-hover:border-white/30 transition-colors shadow-lg">
