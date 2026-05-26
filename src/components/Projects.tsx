@@ -1,5 +1,10 @@
-import { motion } from 'motion/react';
+import { useRef } from 'react';
+import gsap from 'gsap';
+import { useGSAP } from '@gsap/react';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Github, ExternalLink, ArrowRight, Bot, Newspaper, FileText, MonitorPlay, CalendarCheck, Subtitles, Scissors, MessageSquare, MousePointer2 } from 'lucide-react';
+
+gsap.registerPlugin(useGSAP, ScrollTrigger);
 
 const featuredProjects = [
   {
@@ -77,8 +82,25 @@ const featuredProjects = [
 ];
 
 export default function Projects() {
+  const container = useRef<HTMLElement>(null);
+
+  useGSAP(() => {
+    gsap.from('.project-card', {
+      scrollTrigger: {
+        trigger: container.current,
+        start: 'top 80%',
+      },
+      y: 30,
+      autoAlpha: 0,
+      duration: 0.8,
+      stagger: 0.1,
+      ease: 'power4.out',
+      clearProps: 'transform' // Clean up transforms so hover effects work properly
+    });
+  }, { scope: container });
+
   return (
-    <section id="projects" className="px-6 md:px-12 max-w-7xl mx-auto w-full">
+    <section id="projects" ref={container} className="px-6 md:px-12 max-w-7xl mx-auto w-full">
       <div className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
           <h2 className="text-sm font-mono uppercase tracking-[0.2em] text-white/40 mb-2">04 // Projects</h2>
@@ -93,15 +115,9 @@ export default function Projects() {
         {featuredProjects.map((project, index) => {
           const Icon = project.icon;
           return (
-            <motion.div
+            <div
               key={index}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-50px" }}
-              transition={{ duration: 0.6, delay: (index % 3) * 0.1, ease: [0.16, 1, 0.3, 1] }}
-              whileHover={{ y: -8, scale: 1.01 }}
-              className="glass-panel p-8 rounded-3xl flex flex-col h-full group"
-              style={{ willChange: "transform, opacity" }}
+              className="project-card glass-panel p-8 rounded-3xl flex flex-col h-full group invisible transition-transform duration-300 hover:-translate-y-2 hover:scale-[1.01]"
             >
               <div className="flex justify-between items-start mb-8">
                 <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center border border-white/10 group-hover:border-white/30 transition-colors shadow-lg">
@@ -133,7 +149,7 @@ export default function Projects() {
                   </span>
                 ))}
               </div>
-            </motion.div>
+            </div>
           );
         })}
       </div>

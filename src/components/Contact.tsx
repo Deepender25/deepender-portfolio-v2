@@ -1,6 +1,10 @@
-import { motion } from 'motion/react';
+import { useRef, useState, useEffect } from 'react';
+import gsap from 'gsap';
+import { useGSAP } from '@gsap/react';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { ArrowRight, CheckCircle2, Github, Linkedin, Mail, Phone, XCircle } from 'lucide-react';
-import React, { useState } from 'react';
+
+gsap.registerPlugin(useGSAP, ScrollTrigger);
 
 interface FormState {
   name: string;
@@ -11,9 +15,24 @@ interface FormState {
 type Status = 'idle' | 'submitting' | 'success' | 'error';
 
 export default function Contact() {
+  const container = useRef<HTMLElement>(null);
   const [form, setForm] = useState<FormState>({ name: '', email: '', message: '' });
   const [status, setStatus] = useState<Status>('idle');
   const [errorMsg, setErrorMsg] = useState('');
+
+  useGSAP(() => {
+    gsap.from('.contact-card', {
+      scrollTrigger: {
+        trigger: container.current,
+        start: 'top 80%',
+      },
+      y: 40,
+      autoAlpha: 0,
+      duration: 0.8,
+      ease: 'power4.out',
+      clearProps: 'transform'
+    });
+  }, { scope: container });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setForm(prev => ({ ...prev, [e.target.id]: e.target.value }));
@@ -48,14 +67,9 @@ export default function Contact() {
   };
 
   return (
-    <section id="contact" className="px-6 md:px-12 max-w-7xl mx-auto w-full">
-      <motion.div
-        initial={{ opacity: 0, y: 40 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-100px" }}
-        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-        className="glass-panel-strong rounded-[2rem] p-8 md:p-16 relative overflow-hidden"
-        style={{ willChange: "transform, opacity" }}
+    <section id="contact" ref={container} className="px-6 md:px-12 max-w-7xl mx-auto w-full">
+      <div
+        className="contact-card glass-panel-strong rounded-[2rem] p-8 md:p-16 relative overflow-hidden invisible"
       >
         {/* Decorative blur */}
         <div className="absolute bottom-0 left-0 w-64 h-64 bg-white/5 rounded-full blur-[80px] translate-y-1/2 -translate-x-1/2" />
@@ -147,24 +161,16 @@ export default function Contact() {
 
               {/* Status feedback */}
               {status === 'success' && (
-                <motion.div
-                  initial={{ opacity: 0, y: -8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="flex items-center gap-2 text-green-400 text-sm"
-                >
+                <div className="flex items-center gap-2 text-green-400 text-sm animate-in fade-in slide-in-from-top-2">
                   <CheckCircle2 size={16} />
                   Message sent! I'll get back to you soon.
-                </motion.div>
+                </div>
               )}
               {status === 'error' && (
-                <motion.div
-                  initial={{ opacity: 0, y: -8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="flex items-center gap-2 text-red-400 text-sm"
-                >
+                <div className="flex items-center gap-2 text-red-400 text-sm animate-in fade-in slide-in-from-top-2">
                   <XCircle size={16} />
                   {errorMsg}
-                </motion.div>
+                </div>
               )}
 
               <button
@@ -188,7 +194,7 @@ export default function Contact() {
             </form>
           </div>
         </div>
-      </motion.div>
+      </div>
     </section>
   );
 }

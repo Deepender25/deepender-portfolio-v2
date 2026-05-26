@@ -1,4 +1,9 @@
-import { motion } from 'motion/react';
+import { useRef } from 'react';
+import gsap from 'gsap';
+import { useGSAP } from '@gsap/react';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+gsap.registerPlugin(useGSAP, ScrollTrigger);
 
 const experiences = [
   {
@@ -23,8 +28,25 @@ const experiences = [
 ];
 
 export default function Experience() {
+  const container = useRef<HTMLElement>(null);
+
+  useGSAP(() => {
+    gsap.from('.experience-card', {
+      scrollTrigger: {
+        trigger: container.current,
+        start: 'top 80%',
+      },
+      x: -20,
+      autoAlpha: 0,
+      duration: 0.6,
+      stagger: 0.1,
+      ease: 'power4.out',
+      clearProps: 'transform'
+    });
+  }, { scope: container });
+
   return (
-    <section id="experience" className="px-6 md:px-12 max-w-7xl mx-auto w-full">
+    <section id="experience" ref={container} className="px-6 md:px-12 max-w-7xl mx-auto w-full">
       <div className="mb-12">
         <h2 className="text-sm font-mono uppercase tracking-[0.2em] text-white/40 mb-2">03 // Experience</h2>
         <h3 className="text-4xl font-display font-medium tracking-tight text-gradient">Professional Journey</h3>
@@ -32,14 +54,9 @@ export default function Experience() {
       
       <div className="space-y-6">
         {experiences.map((exp, index) => (
-          <motion.div
+          <div
             key={index}
-            initial={{ opacity: 0, x: -20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: 0.6, delay: index * 0.1, ease: [0.16, 1, 0.3, 1] }}
-            className="glass-panel p-8 md:p-10 rounded-3xl relative overflow-hidden group"
-            style={{ willChange: "transform, opacity" }}
+            className="experience-card glass-panel p-8 md:p-10 rounded-3xl relative overflow-hidden group invisible"
           >
             <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
               <div>
@@ -61,7 +78,7 @@ export default function Experience() {
                 </li>
               ))}
             </ul>
-          </motion.div>
+          </div>
         ))}
       </div>
     </section>

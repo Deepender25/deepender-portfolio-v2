@@ -1,15 +1,31 @@
-import { motion } from 'motion/react';
+import { useRef } from 'react';
+import gsap from 'gsap';
+import { useGSAP } from '@gsap/react';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+gsap.registerPlugin(useGSAP, ScrollTrigger);
 
 export default function About() {
+  const container = useRef<HTMLElement>(null);
+
+  useGSAP(() => {
+    gsap.from('.about-card', {
+      scrollTrigger: {
+        trigger: container.current,
+        start: 'top 80%',
+      },
+      y: 40,
+      autoAlpha: 0,
+      duration: 0.8,
+      ease: 'power4.out',
+      clearProps: 'transform' // Clean up transforms after, leaving visibility intact
+    });
+  }, { scope: container });
+
   return (
-    <section id="about" className="px-6 md:px-12 max-w-7xl mx-auto w-full">
-      <motion.div 
-        initial={{ opacity: 0, y: 40 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-100px" }}
-        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-        className="glass-panel-strong rounded-[2rem] p-8 md:p-16 relative overflow-hidden"
-        style={{ willChange: "transform, opacity" }}
+    <section id="about" ref={container} className="px-6 md:px-12 max-w-7xl mx-auto w-full">
+      <div 
+        className="about-card glass-panel-strong rounded-[2rem] p-8 md:p-16 relative overflow-hidden invisible"
       >
         {/* Decorative blur inside card */}
         <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2" />
@@ -49,7 +65,7 @@ export default function About() {
             </div>
           </div>
         </div>
-      </motion.div>
+      </div>
     </section>
   );
 }
