@@ -76,49 +76,54 @@ export default function Hero() {
    *  fight the entrance animation above (GSAP best practice for stacked fromTo).
    * ───────────────────────────────────────────────────────────────────────── */
   useGSAP(() => {
-    const tl = gsap.timeline({
-      scrollTrigger: {
-        trigger: container.current,
-        start: 'top top',
-        end: '+=680',
-        scrub: 1.2,   // 1.2s lag for silky smooth parallax catch-up
-      },
+    let mm = gsap.matchMedia();
+
+    // Only apply heavy parallax on tablet/desktop to avoid mobile lag
+    mm.add('(min-width: 768px)', () => {
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: container.current,
+          start: 'top top',
+          end: '+=680',
+          scrub: 1.2,   // 1.2s lag for silky smooth parallax catch-up
+        },
+      });
+
+      // ── Layer 1 — Badge (furthest back, slowest) ──────────────────────────
+      tl.fromTo('.hero-badge-wrapper',
+        { y: 0, autoAlpha: 1, scale: 1, immediateRender: false },
+        { y: -45, autoAlpha: 0.15, scale: 0.92, ease: 'none' },
+        0
+      );
+
+      // ── Layer 2 — Name line 1 "Deepender" (mid-ground) ───────────────────
+      tl.fromTo('.hero-title-1-wrapper',
+        { y: 0, xPercent: 0, immediateRender: false },
+        { y: -85, xPercent: -1.5, ease: 'none' },
+        0
+      );
+
+      // ── Layer 3 — Name line 2 "Yadav." (slightly faster, drifts right) ───
+      tl.fromTo('.hero-title-2-wrapper',
+        { y: 0, xPercent: 0, immediateRender: false },
+        { y: -120, xPercent: 1.5, ease: 'none' },
+        0
+      );
+
+      // ── Layer 4 — Buttons (mid-foreground, fades out quickly) ─────────────
+      tl.fromTo('.hero-buttons-wrapper',
+        { y: 0, autoAlpha: 1, immediateRender: false },
+        { y: -75, autoAlpha: 0, ease: 'none' },
+        0
+      );
+
+      // ── Layer 5 — Glass panel (foreground, fastest + shrinks away) ────────
+      tl.fromTo('.hero-panel-wrapper',
+        { y: 0, autoAlpha: 1, scale: 1, immediateRender: false },
+        { y: -210, autoAlpha: 0, scale: 0.95, ease: 'none' },
+        0
+      );
     });
-
-    // ── Layer 1 — Badge (furthest back, slowest) ──────────────────────────
-    tl.fromTo('.hero-badge',
-      { y: 0, autoAlpha: 1, scale: 1, immediateRender: false },
-      { y: -45, autoAlpha: 0.15, scale: 0.92, ease: 'none' },
-      0
-    );
-
-    // ── Layer 2 — Name line 1 "Deepender" (mid-ground) ───────────────────
-    tl.fromTo('.hero-title-1',
-      { y: 0, xPercent: 0, immediateRender: false },
-      { y: -85, xPercent: -1.5, ease: 'none' },
-      0
-    );
-
-    // ── Layer 3 — Name line 2 "Yadav." (slightly faster, drifts right) ───
-    tl.fromTo('.hero-title-2',
-      { y: 0, xPercent: 0, immediateRender: false },
-      { y: -120, xPercent: 1.5, ease: 'none' },
-      0
-    );
-
-    // ── Layer 4 — Buttons (mid-foreground, fades out quickly) ─────────────
-    tl.fromTo('.hero-buttons',
-      { y: 0, autoAlpha: 1, immediateRender: false },
-      { y: -75, autoAlpha: 0, ease: 'none' },
-      0
-    );
-
-    // ── Layer 5 — Glass panel (foreground, fastest + shrinks away) ────────
-    tl.fromTo('.hero-panel',
-      { y: 0, autoAlpha: 1, scale: 1, immediateRender: false },
-      { y: -210, autoAlpha: 0, scale: 0.95, ease: 'none' },
-      0
-    );
 
   }, { scope: container });
 
@@ -131,46 +136,54 @@ export default function Hero() {
 
           {/* Left Side */}
           <div>
-            <div className="hero-badge inline-flex items-center gap-3 glass-panel px-4 py-2 rounded-full mb-8 invisible">
-              <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-              <p className="font-mono text-xs text-white/80 uppercase tracking-widest">
-                Available for Internships
-              </p>
+            <div className="hero-badge-wrapper">
+              <div className="hero-badge inline-flex items-center gap-3 glass-panel px-4 py-2 rounded-full mb-8">
+                <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+                <p className="font-mono text-xs text-white/80 uppercase tracking-widest">
+                  Available for Internships
+                </p>
+              </div>
             </div>
 
             <div>
-              <h1 className="hero-title-1 text-5xl md:text-7xl lg:text-[7rem] font-display font-medium tracking-tighter leading-[1.05] invisible">
-                <ScrambleText text="Deepender" delay={300} className="text-gradient" />
-              </h1>
-              <div className="flex flex-col md:flex-row md:items-center gap-6 md:gap-8 mt-2">
-                <h1 className="hero-title-2 text-5xl md:text-7xl lg:text-[7rem] font-display font-medium tracking-tighter leading-[1.05] italic font-light text-white/60 invisible">
-                  <ScrambleText text="Yadav." delay={1500} />
+              <div className="hero-title-1-wrapper">
+                <h1 className="hero-title-1 text-5xl md:text-7xl lg:text-[7rem] font-display font-medium tracking-tighter leading-[1.05]">
+                  <ScrambleText text="Deepender" delay={300} className="text-gradient" />
                 </h1>
+              </div>
+              <div className="flex flex-col md:flex-row md:items-center gap-6 md:gap-8 mt-2">
+                <div className="hero-title-2-wrapper">
+                  <h1 className="hero-title-2 text-5xl md:text-7xl lg:text-[7rem] font-display font-medium tracking-tighter leading-[1.05] italic font-light text-white/60">
+                    <ScrambleText text="Yadav." delay={1500} />
+                  </h1>
+                </div>
 
-                <div className="hero-buttons flex flex-wrap items-center gap-4 mt-4 md:mt-0 invisible">
-                  <a
-                    href="#projects"
-                    className="group flex items-center gap-3 bg-white text-black px-6 py-3 md:px-8 md:py-4 rounded-full text-sm md:text-base font-medium hover:bg-white/90 transition-all hover:scale-105 active:scale-95 tracking-normal font-sans"
-                  >
-                    View Projects
-                    <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
-                  </a>
-                  <div className="flex items-center gap-3 md:gap-4">
-                    {[
-                      { icon: Github, href: "https://github.com/Deepender25" },
-                      { icon: Linkedin, href: "https://www.linkedin.com/in/deepender25/" },
-                      { icon: Mail, href: "mailto:yadavdeepender65@gmail.com" }
-                    ].map((social, i) => (
-                      <a
-                        key={i}
-                        href={social.href}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="glass-panel p-3 md:p-4 rounded-full text-white/60 hover:text-white hover:scale-110 transition-all"
-                      >
-                        <social.icon size={20} />
-                      </a>
-                    ))}
+                <div className="hero-buttons-wrapper">
+                  <div className="hero-buttons flex flex-wrap items-center gap-4 mt-4 md:mt-0">
+                    <a
+                      href="#projects"
+                      className="group flex items-center gap-3 bg-white text-black px-6 py-3 md:px-8 md:py-4 rounded-full text-sm md:text-base font-medium hover:bg-white/90 transition-all hover:scale-105 active:scale-95 tracking-normal font-sans"
+                    >
+                      View Projects
+                      <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                    </a>
+                    <div className="flex items-center gap-3 md:gap-4">
+                      {[
+                        { icon: Github, href: "https://github.com/Deepender25" },
+                        { icon: Linkedin, href: "https://www.linkedin.com/in/deepender25/" },
+                        { icon: Mail, href: "mailto:yadavdeepender65@gmail.com" }
+                      ].map((social, i) => (
+                        <a
+                          key={i}
+                          href={social.href}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="glass-panel p-3 md:p-4 rounded-full text-white/60 hover:text-white hover:scale-110 transition-all"
+                        >
+                          <social.icon size={20} />
+                        </a>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -179,14 +192,16 @@ export default function Hero() {
         </div>
 
         {/* Bottom Section: Wide Text Panel */}
-        <div className="hero-panel w-full glass-panel p-8 md:p-12 rounded-[2rem] relative overflow-hidden invisible">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16">
-            <p className="text-xl md:text-2xl text-white/80 font-light leading-relaxed">
-              Crafting production-grade machine learning pipelines, agentic LLM systems, and full-stack web applications.
-            </p>
-            <p className="text-base md:text-lg text-white/50 font-light leading-relaxed">
-              I specialize in bridging the gap between complex AI models and intuitive user experiences. Currently pursuing my B.Tech in Computer Science & Engineering (AI/ML) at Gurugram University, I am passionate about building scalable solutions that solve real-world problems.
-            </p>
+        <div className="hero-panel-wrapper w-full">
+          <div className="hero-panel w-full glass-panel p-8 md:p-12 rounded-[2rem] relative overflow-hidden">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16">
+              <p className="text-xl md:text-2xl text-white/80 font-light leading-relaxed">
+                Crafting production-grade machine learning pipelines, agentic LLM systems, and full-stack web applications.
+              </p>
+              <p className="text-base md:text-lg text-white/50 font-light leading-relaxed">
+                I specialize in bridging the gap between complex AI models and intuitive user experiences. Currently pursuing my B.Tech in Computer Science & Engineering (AI/ML) at Gurugram University, I am passionate about building scalable solutions that solve real-world problems.
+              </p>
+            </div>
           </div>
         </div>
 

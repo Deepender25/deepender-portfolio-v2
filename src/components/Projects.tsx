@@ -107,19 +107,29 @@ const OP_STEP = 0.22;
 
 function pos(stackPos: number) {
   if (stackPos === 0)
-    return { z: 0, y: 0, scale: 1, opacity: 1, zIndex: TOTAL, rotationX: 0, rotationY: 0 };
+    return { x: 0, z: 0, y: 0, scale: 1, opacity: 1, zIndex: TOTAL, rotationX: 0, rotationY: 0 };
   if (stackPos <= VISIBLE)
     return {
-      z: stackPos * Z_STEP, y: stackPos * Y_STEP,
+      x: 0, z: stackPos * Z_STEP, y: stackPos * Y_STEP,
       scale: 1 - stackPos * SC_STEP,
       opacity: Math.max(0, 1 - stackPos * OP_STEP),
       zIndex: TOTAL - stackPos, rotationX: 0, rotationY: 0,
     };
   return {
-    z: VISIBLE * Z_STEP, y: VISIBLE * Y_STEP,
+    x: 0, z: VISIBLE * Z_STEP, y: VISIBLE * Y_STEP,
     scale: 1 - VISIBLE * SC_STEP, opacity: 0,
     zIndex: 0, rotationX: 0, rotationY: 0,
   };
+}
+
+/* ─────────── Mobile-only position: 2-D, no stack depth ───────────────── */
+// On mobile the 3-D perspective/z effects look broken and cause mis-sized
+// cards. All non-front cards are simply hidden (opacity:0) at the same
+// position — transitions use plain x-slide + fade instead.
+function posMobile(stackPos: number) {
+  if (stackPos === 0)
+    return { x: 0, y: 0, z: 0, scale: 1, opacity: 1, zIndex: TOTAL, rotationX: 0, rotationY: 0 };
+  return   { x: 0, y: 0, z: 0, scale: 1, opacity: 0, zIndex: 0,     rotationX: 0, rotationY: 0 };
 }
 
 /* ─────────── Word-split title renderer ───────────────────────────────── */
@@ -146,8 +156,16 @@ export default function Projects() {
   const activeRef = useRef(0);      // ground-truth current card index
   const pendingTarget = useRef(0);      // latest desired target from scroll
 
+  // Mobile detection — ref for animation callbacks (no re-render needed),
+  // state for JSX layout updates (deck height, card style, etc.)
+  const isMobileRef = useRef(typeof window !== 'undefined' && window.innerWidth < 768);
+  const [isMobileLayout, setIsMobileLayout] = useState(
+    typeof window !== 'undefined' && window.innerWidth < 768
+  );
+
   const [displayIdx, setDisplayIdx] = useState(0);  // drives pagination + video
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const [mobileVideo, setMobileVideo] = useState<string | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   /* ── Track fullscreen to prevent 3D transform conflicts on exit ─────── */
@@ -187,6 +205,24 @@ export default function Projects() {
     };
   }, []);
 
+  /* ── Mobile breakpoint tracker ───────────────────────────────────────── */
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 767px)');
+    const sync = (matches: boolean) => {
+      isMobileRef.current = matches;
+      setIsMobileLayout(matches);
+      // Re-snap all cards to the correct position function when breakpoint changes
+      const c = Array.from(deckRef.current?.querySelectorAll('.pcard') || []) as HTMLElement[];
+      c.forEach((card, i) => {
+        const stackPos = (i - activeRef.current + TOTAL) % TOTAL;
+        gsap.set(card, matches ? posMobile(stackPos) : pos(stackPos));
+      });
+    };
+    const handler = (e: MediaQueryListEvent) => sync(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
+
   /* ── Load video immediately (next paint) — no spinner wait ──────────── */
   useEffect(() => {
     setVideoUrl(null);
@@ -206,13 +242,14 @@ export default function Projects() {
 
       // Kill any in-flight GSAP animations on cards
       const c = Array.from(
-        deckRef.current?.querySelectorAll<HTMLElement>('.pcard') ?? []
-      );
+        deckRef.current?.querySelectorAll('.pcard') || []
+      ) as HTMLElement[];
       c.forEach(card => gsap.killTweensOf(card));
       isAnim.current = false;
 
       // Snap all cards instantly to their initial stack positions (no animation)
-      c.forEach((card, i) => gsap.set(card, pos(i)));
+      const mobile = isMobileRef.current;
+      c.forEach((card, i) => gsap.set(card, mobile ? posMobile(i) : pos(i)));
 
       // Show card-0 words immediately (no slide-up animation)
       const first = c[0];
@@ -248,10 +285,15 @@ export default function Projects() {
 
   /* ── Card helpers ────────────────────────────────────────────────────── */
   const cards = () =>
-    Array.from(deckRef.current?.querySelectorAll<HTMLElement>('.pcard') ?? []);
+    Array.from(deckRef.current?.querySelectorAll('.pcard') || []) as HTMLElement[];
 
   const revealWords = (card: HTMLElement) => {
     const words = card.querySelectorAll('.word-inner');
+    if (isMobileRef.current) {
+      // Skip the staggered slide-up on mobile — snap words instantly
+      gsap.set(words, { y: '0%' });
+      return;
+    }
     gsap.fromTo(words,
       { y: '105%' },
       { y: '0%', duration: 0.5, stagger: 0.04, ease: 'power2.out', delay: 0.12 },
@@ -277,6 +319,23 @@ export default function Projects() {
     setVideoUrl(null);
     setDisplayIdx(nxt);
 
+    if (isMobileRef.current) {
+      // ── Mobile: simple x-slide + fade, no 3-D transforms ─────────────
+      const DUR = 0.32;
+      gsap.to(c[cur], { x: -55, opacity: 0, duration: DUR, ease: 'power2.inOut' });
+      gsap.set(c[nxt], { x: 55, opacity: 0, zIndex: TOTAL, y: 0, z: 0, scale: 1 });
+      gsap.to(c[nxt], { x: 0, opacity: 1, duration: DUR, ease: 'power2.inOut', delay: 0.05 });
+      revealWords(c[nxt]);
+      setTimeout(() => {
+        gsap.set(c[cur], posMobile(TOTAL - 1)); // hide it behind
+        activeRef.current = nxt;
+        isAnim.current = false;
+        onDone?.();
+      }, 380);
+      return;
+    }
+
+    // ── Desktop: 3-D fly-out / stack-advance ──────────────────────────
     // Fly current front card out
     gsap.to(c[cur], {
       z: 350, y: 70, scale: 1.06, opacity: 0,
@@ -320,6 +379,23 @@ export default function Projects() {
     setVideoUrl(null);
     setDisplayIdx(prv);
 
+    if (isMobileRef.current) {
+      // ── Mobile: simple x-slide + fade, no 3-D transforms ─────────────
+      const DUR = 0.32;
+      gsap.to(c[cur], { x: 55, opacity: 0, duration: DUR, ease: 'power2.inOut' });
+      gsap.set(c[prv], { x: -55, opacity: 0, zIndex: TOTAL, y: 0, z: 0, scale: 1 });
+      gsap.to(c[prv], { x: 0, opacity: 1, duration: DUR, ease: 'power2.inOut', delay: 0.05 });
+      revealWords(c[prv]);
+      setTimeout(() => {
+        gsap.set(c[cur], posMobile(TOTAL - 1)); // hide it behind
+        activeRef.current = prv;
+        isAnim.current = false;
+        onDone?.();
+      }, 380);
+      return;
+    }
+
+    // ── Desktop: 3-D fly-in / stack-advance ───────────────────────────
     // Pre-position incoming card at the fly-in spot
     gsap.set(c[prv], {
       z: 350, y: 70, scale: 1.06, opacity: 0,
@@ -357,11 +433,12 @@ export default function Projects() {
       // gap × 680ms (e.g. 8 cards = 5.4s). Instead, kill all tweens and
       // instantly snap every card to its correct stack position for the target,
       // then update state. No animation — the deck locks to the scroll position.
+      const mobile = isMobileRef.current;
       const c = cards();
       c.forEach(card => gsap.killTweensOf(card));
       c.forEach((card, i) => {
         const stackPos = (i - target + TOTAL) % TOTAL;
-        gsap.set(card, pos(stackPos));
+        gsap.set(card, mobile ? posMobile(stackPos) : pos(stackPos));
       });
       // Show the new front card's words immediately
       const newFront = c[target];
@@ -393,7 +470,8 @@ export default function Projects() {
 
   /* ── Set initial card positions (once on mount) ──────────────────────── */
   useGSAP(() => {
-    cards().forEach((card, i) => gsap.set(card, pos(i)));
+    const mobile = isMobileRef.current;
+    cards().forEach((card, i) => gsap.set(card, mobile ? posMobile(i) : pos(i)));
     // Reveal words on first card
     const first = deckRef.current?.querySelector<HTMLElement>('.pcard');
     if (first) revealWords(first);
@@ -478,7 +556,7 @@ export default function Projects() {
       )}
 
       {/* ── Header ─────────────────────────────────────────────────────── */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pt-24 pb-8 shrink-0">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-3 pt-16 md:pt-24 pb-5 md:pb-8 shrink-0">
         <div>
           <h2 className="text-sm font-mono uppercase tracking-[0.2em] text-white/40 mb-2">
             04 // Projects
@@ -505,8 +583,9 @@ export default function Projects() {
           ref={deckRef}
           className="project-deck relative w-full flex items-center justify-center"
           style={{
-            height: '575px',
-            perspective: '1600px',
+            // On mobile: shorter deck, no 3-D perspective (causes z-clipping)
+            height: isMobileLayout ? '460px' : '575px',
+            perspective: isMobileLayout ? 'none' : '1600px',
             perspectiveOrigin: '50% 52%',
           }}
         >
@@ -518,17 +597,21 @@ export default function Projects() {
             return (
               <div
                 key={project.title}
-                className="pcard absolute inset-x-0 mx-auto w-[1125px] h-[550px] max-md:w-[340px] max-md:h-[600px] rounded-[32px] p-8 glass-panel flex"
+                className="pcard absolute inset-x-0 mx-auto
+                  w-[1125px] h-[550px]
+                  max-md:w-[calc(100vw-2.5rem)] max-md:h-[440px]
+                  rounded-[32px] p-5 md:p-8 glass-panel flex"
                 style={{
-                  transformStyle: 'preserve-3d',
-                  backfaceVisibility: 'hidden',
+                  // Disable 3-D on mobile — 2-D slide transitions only
+                  transformStyle: isMobileLayout ? 'flat' : 'preserve-3d',
+                  backfaceVisibility: isMobileLayout ? 'visible' : 'hidden',
                   willChange: 'transform, opacity',
                 }}
               >
                 <div className="grid grid-cols-12 gap-6 h-full w-full max-md:flex max-md:flex-col">
 
-                  {/* LEFT: details */}
-                  <div className="col-span-5 flex flex-col justify-between h-full max-md:flex-grow max-md:h-auto">
+                  {/* LEFT: details — takes full height on mobile (video is hidden) */}
+                  <div className="col-span-5 flex flex-col justify-between h-full max-md:h-full">
 
                     {/* Icon + links row */}
                     <div className="flex justify-between items-start">
@@ -552,29 +635,39 @@ export default function Projects() {
                     </div>
 
                     {/* Title + description */}
-                    <div className="flex-grow flex flex-col justify-center my-4">
-                      <h3 className="text-[2.3rem] font-display font-semibold tracking-tight leading-tight text-white mb-4">
+                    <div className="flex-grow flex flex-col justify-center my-3 md:my-4">
+                      <h3 className="text-2xl md:text-[2.3rem] font-display font-semibold tracking-tight leading-tight text-white mb-2 md:mb-4">
                         <Title text={project.title} />
                       </h3>
-                      <p className="text-white/65 font-light leading-relaxed text-[17px]">
+                      <p className="text-white/65 font-light leading-relaxed text-sm md:text-[17px] line-clamp-3 md:line-clamp-none">
                         {project.description}
                       </p>
                     </div>
 
-                    {/* All tech tags — no truncation */}
-                    <div className="flex flex-wrap gap-2 mt-auto">
-                      {project.tech.map((t, i) => (
+                    {/* Tech tags — limit to 5 on mobile to prevent overflow */}
+                    <div className="flex flex-wrap gap-1.5 md:gap-2 mt-auto">
+                      {project.tech.slice(0, isMobileLayout ? 5 : project.tech.length).map((t, i) => (
                         <span key={i}
-                          className="text-[11px] font-mono text-white/45 bg-white/5 border border-white/5 px-3 py-2 rounded-full uppercase tracking-wider">
+                          className="text-[10px] md:text-[11px] font-mono text-white/45 bg-white/5 border border-white/5 px-2.5 md:px-3 py-1.5 md:py-2 rounded-full uppercase tracking-wider">
                           {t}
                         </span>
                       ))}
                     </div>
+
+                    {/* Mobile Demo Video Button */}
+                    {isMobileLayout && project.video && (
+                      <button
+                        onClick={() => setMobileVideo(project.video)}
+                        className="mt-5 w-full py-3 rounded-[14px] bg-white/10 text-white font-medium text-[13px] tracking-wide flex items-center justify-center gap-2 border border-white/20 active:scale-[0.98] transition-all uppercase hover:bg-white/15"
+                      >
+                        <MonitorPlay size={16} /> Watch Demo Video
+                      </button>
+                    )}
                   </div>
 
-                  {/* RIGHT: YouTube player */}
+                  {/* RIGHT: YouTube player — hidden on mobile to save vertical space */}
                   <div
-                    className="col-span-7 relative rounded-2xl overflow-hidden border border-white/10 bg-black max-md:h-[210px] max-md:shrink-0"
+                    className="col-span-7 relative rounded-2xl overflow-hidden border border-white/10 bg-black hidden md:block"
                     style={{ minHeight: 0 }}
                   >
                     {playing ? (
@@ -639,6 +732,35 @@ export default function Projects() {
           Scroll to explore projects
         </p>
       </div>
+
+      {/* ── Mobile Fullscreen Video Overlay ────────────────────────────── */}
+      {mobileVideo && (
+        <div 
+          className="fixed inset-0 z-[9999] bg-black/70 backdrop-blur-sm flex flex-col items-center justify-center p-4 animate-in fade-in duration-200"
+          onClick={() => setMobileVideo(null)}
+        >
+          <div 
+            className="w-full max-w-md flex flex-col gap-3"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button 
+              onClick={() => setMobileVideo(null)}
+              className="self-start flex items-center gap-2 px-4 py-2 rounded-full bg-black/40 backdrop-blur-md border border-white/20 text-white active:scale-90 transition-transform shadow-lg text-sm font-medium"
+            >
+              <ArrowLeft size={18} /> Back
+            </button>
+            <div className="relative w-full aspect-video rounded-2xl overflow-hidden shadow-2xl border border-white/20 bg-black">
+              <iframe
+                src={`${mobileVideo}?autoplay=1&mute=0&rel=0&controls=1&modestbranding=1&vq=hd1080&hd=1&iv_load_policy=3&fs=1`}
+                title="Mobile Demo Video"
+                className="absolute inset-0 w-full h-full border-none"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
+                allowFullScreen
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
