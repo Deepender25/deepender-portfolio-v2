@@ -63,6 +63,9 @@ export default function App() {
     const path = window.location.pathname;
     const sectionId = path.substring(1);
     if (['about', 'skills', 'experience', 'projects', 'contact'].includes(sectionId)) {
+      if (sectionId === 'projects') {
+        window.dispatchEvent(new CustomEvent('reset-projects'));
+      }
       setTimeout(() => {
         document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth' });
       }, 500);

@@ -27,7 +27,7 @@ const featuredProjects = [
     tech: ['Next.js', 'React', 'Flask', 'Python', 'Supabase', 'ChromaDB', 'Gemini API', 'LangChain'],
     github: 'https://github.com/Deepender25/Campus_Chatbot',
     live: '#',
-    video: 'https://www.youtube.com/embed/LXb3EKWsInQ',
+    video: 'https://www.youtube.com/embed/MzEFeIRJ0eQ',
     icon: MessageSquare,
   },
   {
@@ -36,7 +36,7 @@ const featuredProjects = [
     tech: ['Python', 'PyQt6', 'OpenCV', 'Mediapipe', 'PyAutoGUI', 'NumPy', 'Pywin32'],
     github: 'https://github.com/Deepender25/CursorViaCam',
     live: '#',
-    video: 'https://www.youtube.com/embed/Ke90Tje7VS0',
+    video: 'https://www.youtube.com/embed/MzEFeIRJ0eQ',
     icon: MousePointer2,
   },
   {
@@ -45,7 +45,7 @@ const featuredProjects = [
     tech: ['Kotlin', 'Python', 'Jetpack Compose', 'Coroutines', 'AES-256-GCM'],
     github: 'https://github.com/Deepender25/Buddy',
     live: '#',
-    video: 'https://www.youtube.com/embed/t7FyL18p9nQ',
+    video: 'https://www.youtube.com/embed/MzEFeIRJ0eQ',
     icon: Bot,
   },
   {
@@ -54,7 +54,7 @@ const featuredProjects = [
     tech: ['React 19', 'TypeScript', 'Tailwind', 'Express.js', 'Gemini API', 'Python'],
     github: 'https://github.com/Deepender25/AI-Attendance',
     live: 'https://attendsight.vercel.app/login',
-    video: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+    video: 'https://www.youtube.com/embed/MzEFeIRJ0eQ',
     icon: CalendarCheck,
   },
   {
@@ -63,7 +63,7 @@ const featuredProjects = [
     tech: ['Python', 'FastAPI', 'Vanilla JS', 'HTML5 Canvas', 'Vercel'],
     github: 'https://github.com/Deepender25/Presenta',
     live: 'https://presenta-studio.vercel.app',
-    video: 'https://www.youtube.com/embed/ScMzIvxBSi4',
+    video: 'https://www.youtube.com/embed/MzEFeIRJ0eQ',
     icon: MonitorPlay,
   },
   {
@@ -72,7 +72,7 @@ const featuredProjects = [
     tech: ['Python', 'Gemini API', 'RSS', 'Web Scraping', 'Vercel'],
     github: 'https://github.com/Deepender25/AI-news-Automation',
     live: '#',
-    video: 'https://www.youtube.com/embed/LXb3EKWsInQ',
+    video: 'https://www.youtube.com/embed/MzEFeIRJ0eQ',
     icon: Newspaper,
   },
   {
@@ -81,7 +81,7 @@ const featuredProjects = [
     tech: ['React', 'TypeScript', 'Python', 'Flask', 'Whisper', 'FFmpeg', 'Gemini API'],
     github: 'https://github.com/Deepender25/Video-to-Shorts',
     live: '#',
-    video: 'https://www.youtube.com/embed/Ke90Tje7VS0',
+    video: 'https://www.youtube.com/embed/MzEFeIRJ0eQ',
     icon: Scissors,
   },
   {
@@ -90,7 +90,7 @@ const featuredProjects = [
     tech: ['React', 'TypeScript', 'Python', 'Flask', 'Whisper', 'FFmpeg', 'Gemini API'],
     github: 'https://github.com/Deepender25/Sub-Gen',
     live: '#',
-    video: 'https://www.youtube.com/embed/t7FyL18p9nQ',
+    video: 'https://www.youtube.com/embed/MzEFeIRJ0eQ',
     icon: Subtitles,
   },
 ];
@@ -142,6 +142,7 @@ export default function Projects() {
   const stRef = useRef<ScrollTrigger | null>(null);
 
   const isAnim = useRef(false);
+  const isResetting = useRef(false);  // blocks onUpdate during navbar reset
   const activeRef = useRef(0);      // ground-truth current card index
   const pendingTarget = useRef(0);      // latest desired target from scroll
 
@@ -196,6 +197,55 @@ export default function Projects() {
     return () => cancelAnimationFrame(raf);
   }, [displayIdx]);
 
+  /* ── Instant reset to card 0 on navbar "Projects" click ─────────────── */
+  useEffect(() => {
+    const handleReset = () => {
+      // Silence ScrollTrigger onUpdate so it can't re-trigger card animations
+      // while we scroll the page back to the section top.
+      isResetting.current = true;
+
+      // Kill any in-flight GSAP animations on cards
+      const c = Array.from(
+        deckRef.current?.querySelectorAll<HTMLElement>('.pcard') ?? []
+      );
+      c.forEach(card => gsap.killTweensOf(card));
+      isAnim.current = false;
+
+      // Snap all cards instantly to their initial stack positions (no animation)
+      c.forEach((card, i) => gsap.set(card, pos(i)));
+
+      // Show card-0 words immediately (no slide-up animation)
+      const first = c[0];
+      if (first) {
+        gsap.set(first.querySelectorAll('.word-inner'), { y: '0%' });
+      }
+
+      // Reset all tracking refs
+      activeRef.current = 0;
+      pendingTarget.current = 0;
+
+      // Reset React state (clears video, reloads card 0's video)
+      setVideoUrl(null);
+      setDisplayIdx(0);
+
+      // Use stRef.current.start — the ScrollTrigger instance's own value for
+      // "where progress=0 begins (in page px from top)". This is accurate
+      // whether the user is coming from above OR below (e.g. Contact section),
+      // because it accounts for the pinned spacer that scrollIntoView/offsetTop miss.
+      if (stRef.current) {
+        window.scrollTo({ top: stRef.current.start, behavior: 'instant' as ScrollBehavior });
+      }
+
+      // Re-enable onUpdate after one frame (instant scroll has settled)
+      requestAnimationFrame(() => {
+        isResetting.current = false;
+      });
+    };
+
+    window.addEventListener('reset-projects', handleReset);
+    return () => window.removeEventListener('reset-projects', handleReset);
+  }, []);
+
   /* ── Card helpers ────────────────────────────────────────────────────── */
   const cards = () =>
     Array.from(deckRef.current?.querySelectorAll<HTMLElement>('.pcard') ?? []);
@@ -218,24 +268,27 @@ export default function Projects() {
     );
     if (isAnim.current || isFS) return;
     isAnim.current = true;
-    setVideoUrl(null);
 
     const c = cards();
     const cur = activeRef.current;
     const nxt = (cur + 1) % TOTAL;
 
+    // Update display immediately so counter and video react at once
+    setVideoUrl(null);
+    setDisplayIdx(nxt);
+
     // Fly current front card out
     gsap.to(c[cur], {
       z: 350, y: 70, scale: 1.06, opacity: 0,
       rotationX: -12, rotationY: 8,
-      duration: 0.65, ease: 'power2.inOut',
+      duration: 0.45, ease: 'power2.inOut',
     });
 
     // Move every other card to its new position
     for (let i = 0; i < TOTAL; i++) {
       if (i === cur) continue;
       const p = (i - nxt + TOTAL) % TOTAL;
-      gsap.to(c[i], { ...pos(p), duration: 0.65, ease: 'power2.inOut' });
+      gsap.to(c[i], { ...pos(p), duration: 0.45, ease: 'power2.inOut' });
       if (p === 0) revealWords(c[i]);
     }
 
@@ -243,10 +296,9 @@ export default function Projects() {
       // Park outgoing card silently behind the stack
       gsap.set(c[cur], { ...pos(TOTAL - 1), opacity: 0 });
       activeRef.current = nxt;
-      setDisplayIdx(nxt);
       isAnim.current = false;
       onDone?.();
-    }, 680);
+    }, 470);
   };
 
   /* ── Go one card backward ────────────────────────────────────────────── */
@@ -259,11 +311,14 @@ export default function Projects() {
     );
     if (isAnim.current || isFS) return;
     isAnim.current = true;
-    setVideoUrl(null);
 
     const c = cards();
     const cur = activeRef.current;
     const prv = (cur - 1 + TOTAL) % TOTAL;
+
+    // Update display immediately so counter and video react at once
+    setVideoUrl(null);
+    setDisplayIdx(prv);
 
     // Pre-position incoming card at the fly-in spot
     gsap.set(c[prv], {
@@ -272,22 +327,21 @@ export default function Projects() {
     });
 
     // Animate it in
-    gsap.to(c[prv], { ...pos(0), duration: 0.65, ease: 'power2.inOut' });
+    gsap.to(c[prv], { ...pos(0), duration: 0.45, ease: 'power2.inOut' });
     revealWords(c[prv]);
 
     // Push all others one position back
     for (let i = 0; i < TOTAL; i++) {
       if (i === prv) continue;
       const p = (i - prv + TOTAL) % TOTAL;
-      gsap.to(c[i], { ...pos(p), duration: 0.65, ease: 'power2.inOut' });
+      gsap.to(c[i], { ...pos(p), duration: 0.45, ease: 'power2.inOut' });
     }
 
     setTimeout(() => {
       activeRef.current = prv;
-      setDisplayIdx(prv);
       isAnim.current = false;
       onDone?.();
-    }, 680);
+    }, 470);
   };
 
   /* ── Self-correcting step: always reads the LATEST pendingTarget ref ─── */
@@ -295,6 +349,33 @@ export default function Projects() {
     const cur = activeRef.current;
     const target = pendingTarget.current;
     if (cur === target) return;
+
+    const gap = Math.abs(target - cur);
+
+    if (gap > 1) {
+      // Fast scroll: gap is large — animating one card at a time would take
+      // gap × 680ms (e.g. 8 cards = 5.4s). Instead, kill all tweens and
+      // instantly snap every card to its correct stack position for the target,
+      // then update state. No animation — the deck locks to the scroll position.
+      const c = cards();
+      c.forEach(card => gsap.killTweensOf(card));
+      c.forEach((card, i) => {
+        const stackPos = (i - target + TOTAL) % TOTAL;
+        gsap.set(card, pos(stackPos));
+      });
+      // Show the new front card's words immediately
+      const newFront = c[target];
+      if (newFront) {
+        gsap.set(newFront.querySelectorAll('.word-inner'), { y: '0%' });
+      }
+      activeRef.current = target;
+      isAnim.current = false;
+      setVideoUrl(null);
+      setDisplayIdx(target);
+      return;
+    }
+
+    // gap === 1: single smooth animated transition
     const advance = target > cur ? goNext : goPrev;
     // Pass correctToTarget itself as onDone so chaining always uses latest target
     advance(() => correctToTarget());
@@ -326,7 +407,7 @@ export default function Projects() {
     // Dead-zone buffer: user must scroll past BUFFER px before first
     // card transition, and the last card stays pinned for BUFFER px after
     // the final transition — prevents accidental triggers at boundaries.
-    const BUFFER = 400;  // px dead zone at each end
+    const BUFFER = 300;  // px dead zone at each end
     const cardRange = (TOTAL - 1) * SCROLL_PER_CARD;
     const totalScroll = cardRange + 2 * BUFFER;
 
@@ -337,6 +418,9 @@ export default function Projects() {
       pin: true,
       pinSpacing: true,
       onUpdate(self) {
+        // Silenced during navbar-reset to prevent re-animating cards
+        if (isResetting.current) return;
+
         const isFS = !!(
           document.fullscreenElement ||
           (document as any).webkitFullscreenElement ||
