@@ -309,11 +309,18 @@ export default function Projects() {
       (document as any).msFullscreenElement
     );
     if (isAnim.current || isFS) return;
-    isAnim.current = true;
-
-    const c = cards();
     const cur = activeRef.current;
-    const nxt = (cur + 1) % TOTAL;
+    if (cur >= TOTAL - 1) return; // Prevent cycling past the last card
+    
+    isAnim.current = true;
+    const c = cards();
+    const nxt = cur + 1;
+
+    // Sync scroll position silently (ScrollTrigger ignores this while isAnim is true)
+    if (stRef.current) {
+      const targetPx = 300 + nxt * SCROLL_PER_CARD; // 300 is BUFFER
+      window.scrollTo({ top: stRef.current.start + targetPx, behavior: 'instant' as ScrollBehavior });
+    }
 
     // Update display immediately so counter and video react at once
     setVideoUrl(null);
@@ -369,11 +376,18 @@ export default function Projects() {
       (document as any).msFullscreenElement
     );
     if (isAnim.current || isFS) return;
-    isAnim.current = true;
-
-    const c = cards();
     const cur = activeRef.current;
-    const prv = (cur - 1 + TOTAL) % TOTAL;
+    if (cur <= 0) return; // Prevent cycling past the first card
+    
+    isAnim.current = true;
+    const c = cards();
+    const prv = cur - 1;
+
+    // Sync scroll position silently (ScrollTrigger ignores this while isAnim is true)
+    if (stRef.current) {
+      const targetPx = 300 + prv * SCROLL_PER_CARD; // 300 is BUFFER
+      window.scrollTo({ top: stRef.current.start + targetPx, behavior: 'instant' as ScrollBehavior });
+    }
 
     // Update display immediately so counter and video react at once
     setVideoUrl(null);
@@ -705,9 +719,14 @@ export default function Projects() {
         {/* ── Nav controls ───────────────────────────────────────────────── */}
         <div className="flex items-center gap-8 mt-10 shrink-0">
           <button
-            onClick={() => goPrevRef.current()}
+            onClick={() => displayIdx > 0 && goPrevRef.current()}
             aria-label="Previous project"
-            className="w-14 h-14 rounded-full flex items-center justify-center bg-white/5 border border-white/10 text-white/50 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all cursor-pointer active:scale-90"
+            disabled={displayIdx === 0}
+            className={`w-14 h-14 rounded-full flex items-center justify-center border transition-all ${
+              displayIdx === 0
+                ? 'bg-transparent border-white/5 text-white/10 cursor-not-allowed'
+                : 'bg-white/5 border-white/10 text-white/50 hover:text-white hover:bg-white/10 hover:border-white/20 cursor-pointer active:scale-90'
+            }`}
           >
             <ArrowLeft size={20} />
           </button>
@@ -719,9 +738,14 @@ export default function Projects() {
           </div>
 
           <button
-            onClick={() => goNextRef.current()}
+            onClick={() => displayIdx < TOTAL - 1 && goNextRef.current()}
             aria-label="Next project"
-            className="w-14 h-14 rounded-full flex items-center justify-center bg-white/5 border border-white/10 text-white/50 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all cursor-pointer active:scale-90"
+            disabled={displayIdx === TOTAL - 1}
+            className={`w-14 h-14 rounded-full flex items-center justify-center border transition-all ${
+              displayIdx === TOTAL - 1
+                ? 'bg-transparent border-white/5 text-white/10 cursor-not-allowed'
+                : 'bg-white/5 border-white/10 text-white/50 hover:text-white hover:bg-white/10 hover:border-white/20 cursor-pointer active:scale-90'
+            }`}
           >
             <ArrowRight size={20} />
           </button>
