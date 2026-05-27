@@ -1,14 +1,16 @@
 import { useRef } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { ArrowRight, Github, Linkedin, Mail } from 'lucide-react';
 import { ScrambleText } from './ui/ScrambleText';
 
-gsap.registerPlugin(useGSAP);
+gsap.registerPlugin(useGSAP, ScrollTrigger);
 
 export default function Hero() {
   const container = useRef<HTMLElement>(null);
 
+  /* ── Entrance animation ───────────────────────────────────────────────── */
   useGSAP(() => {
     const tl = gsap.timeline();
 
@@ -50,8 +52,73 @@ export default function Hero() {
         ease: 'power4.out',
       }, '-=0.8');
 
-    // Add a continuous pulsing animation to the badge dot using GSAP instead of Tailwind animate-pulse if desired,
-    // or keep the Tailwind class for simplicity. We'll keep the Tailwind class.
+    // Gentle idle float on the badge (like clouds drifting in the reference scene)
+    // Starts after the entrance completes, loops forever
+    tl.to('.hero-badge', {
+      y: -6,
+      duration: 2.5,
+      ease: 'sine.inOut',
+      repeat: -1,
+      yoyo: true,
+    }, '+=0.2');
+
+  }, { scope: container });
+
+  /* ── Scroll-driven parallax (mirrors the mountain-layer reference) ──────
+   *  All tweens at position 0 in the timeline — they all start together as
+   *  the user scrolls. Different y displacements create the depth illusion:
+   *    badge (background)  → slow
+   *    titles              → medium
+   *    panel (foreground)  → fast + scale + fade
+   *
+   *  immediateRender: false is required on the fromVars so the start values
+   *  are NOT applied the instant the ScrollTrigger is created — which would
+   *  fight the entrance animation above (GSAP best practice for stacked fromTo).
+   * ───────────────────────────────────────────────────────────────────────── */
+  useGSAP(() => {
+    const tl = gsap.timeline({
+      scrollTrigger: {
+        trigger: container.current,
+        start: 'top top',
+        end: '+=680',
+        scrub: 1.2,   // 1.2s lag for silky smooth parallax catch-up
+      },
+    });
+
+    // ── Layer 1 — Badge (furthest back, slowest) ──────────────────────────
+    tl.fromTo('.hero-badge',
+      { y: 0, autoAlpha: 1, scale: 1, immediateRender: false },
+      { y: -45, autoAlpha: 0.15, scale: 0.92, ease: 'none' },
+      0
+    );
+
+    // ── Layer 2 — Name line 1 "Deepender" (mid-ground) ───────────────────
+    tl.fromTo('.hero-title-1',
+      { y: 0, xPercent: 0, immediateRender: false },
+      { y: -85, xPercent: -1.5, ease: 'none' },
+      0
+    );
+
+    // ── Layer 3 — Name line 2 "Yadav." (slightly faster, drifts right) ───
+    tl.fromTo('.hero-title-2',
+      { y: 0, xPercent: 0, immediateRender: false },
+      { y: -120, xPercent: 1.5, ease: 'none' },
+      0
+    );
+
+    // ── Layer 4 — Buttons (mid-foreground, fades out quickly) ─────────────
+    tl.fromTo('.hero-buttons',
+      { y: 0, autoAlpha: 1, immediateRender: false },
+      { y: -75, autoAlpha: 0, ease: 'none' },
+      0
+    );
+
+    // ── Layer 5 — Glass panel (foreground, fastest + shrinks away) ────────
+    tl.fromTo('.hero-panel',
+      { y: 0, autoAlpha: 1, scale: 1, immediateRender: false },
+      { y: -210, autoAlpha: 0, scale: 0.95, ease: 'none' },
+      0
+    );
 
   }, { scope: container });
 
