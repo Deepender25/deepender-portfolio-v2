@@ -137,8 +137,8 @@ function Title({ text }: { text: string }) {
   return (
     <>
       {text.split(' ').map((word, i) => (
-        <span key={i} className="inline-block overflow-hidden mr-[0.35em] last:mr-0 align-bottom">
-          <span className="word-inner inline-block will-change-transform">{word}</span>
+        <span key={i} className="inline-block max-md:overflow-visible overflow-hidden mr-[0.35em] last:mr-0 align-bottom">
+          <span className="word-inner inline-block will-change-transform max-md:!transform-none">{word}</span>
         </span>
       ))}
     </>
@@ -443,16 +443,44 @@ export default function Projects() {
     const gap = Math.abs(target - cur);
 
     if (gap > 1) {
-      // Fast scroll: gap is large — animating one card at a time would take
+      const mobile = isMobileRef.current;
+      const c = cards();
+
+      if (mobile) {
+        // Mobile fast scroll: animate directly from cur to target! No instant snap!
+        isAnim.current = true;
+        const dir = target > cur ? 1 : -1;
+        const DUR = 0.32;
+        
+        // Hide cur
+        gsap.to(c[cur], { x: dir * -55, opacity: 0, duration: DUR, ease: 'power2.inOut' });
+        
+        // Setup target
+        gsap.set(c[target], { x: dir * 55, opacity: 0, zIndex: TOTAL, y: 0, z: 0, scale: 1 });
+        
+        // Animate target in
+        gsap.to(c[target], { x: 0, opacity: 1, duration: DUR, ease: 'power2.inOut', delay: 0.05 });
+        revealWords(c[target]);
+        
+        setTimeout(() => {
+          gsap.set(c[cur], posMobile(TOTAL - 1)); // hide it behind
+          activeRef.current = target;
+          isAnim.current = false;
+          setVideoUrl(null);
+          setDisplayIdx(target);
+          correctToTarget(); // re-eval in case they scrolled even further
+        }, 380);
+        return;
+      }
+
+      // Desktop fast scroll: gap is large — animating one card at a time would take
       // gap × 680ms (e.g. 8 cards = 5.4s). Instead, kill all tweens and
       // instantly snap every card to its correct stack position for the target,
       // then update state. No animation — the deck locks to the scroll position.
-      const mobile = isMobileRef.current;
-      const c = cards();
       c.forEach(card => gsap.killTweensOf(card));
       c.forEach((card, i) => {
         const stackPos = (i - target + TOTAL) % TOTAL;
-        gsap.set(card, mobile ? posMobile(stackPos) : pos(stackPos));
+        gsap.set(card, pos(stackPos)); // mobile is handled above
       });
       // Show the new front card's words immediately
       const newFront = c[target];
