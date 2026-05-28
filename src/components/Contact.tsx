@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -21,16 +21,44 @@ export default function Contact() {
   const [errorMsg, setErrorMsg] = useState('');
 
   useGSAP(() => {
-    gsap.from('.contact-card', {
-      scrollTrigger: {
-        trigger: container.current,
-        start: 'top 80%',
-      },
-      y: 40,
-      autoAlpha: 0,
-      duration: 0.8,
-      ease: 'power4.out',
-      clearProps: 'transform'
+    const mm = gsap.matchMedia();
+
+    mm.add('(min-width: 768px)', () => {
+      // 1. Initial states for Entrance
+      gsap.set('.contact-label',   { autoAlpha: 0, y: 40 });
+      gsap.set('.contact-heading', { autoAlpha: 0, y: 40 });
+      gsap.set('.contact-subtext', { autoAlpha: 0, y: 40 });
+      gsap.set('.contact-link',    { autoAlpha: 0, y: 40 });
+      gsap.set('.contact-form-panel',{ autoAlpha: 0, y: 40 });
+
+      // 2. Entrance Timeline (Consistent with Hero & others)
+      const tlIn = gsap.timeline({
+        scrollTrigger: {
+          trigger: container.current,
+          start: 'top 75%',
+          toggleActions: 'play none none reverse',
+        },
+      });
+
+      tlIn.to('.contact-label', { autoAlpha: 1, y: 0, duration: 1.0, ease: 'power4.out' })
+          .to('.contact-heading', { autoAlpha: 1, y: 0, duration: 1.2, ease: 'power4.out' }, '-=0.8')
+          .to('.contact-subtext', { autoAlpha: 1, y: 0, duration: 1.2, ease: 'power4.out' }, '-=1.0')
+          .to('.contact-link', { autoAlpha: 1, y: 0, duration: 1.2, ease: 'power4.out', stagger: 0.1 }, '-=0.9')
+          .to('.contact-form-panel', { autoAlpha: 1, y: 0, duration: 1.2, ease: 'power4.out' }, '-=1.0');
+
+      // 3. Parallax Exit Timeline (Whole Container)
+      const tlOut = gsap.timeline({
+        scrollTrigger: {
+          trigger: container.current,
+          start: 'top 15%',
+          end: 'bottom top',
+          scrub: 1.2,
+        },
+      });
+
+      tlOut.fromTo('.contact-container-wrapper',
+        { y: 0, autoAlpha: 1, scale: 1, immediateRender: false },
+        { y: -150, autoAlpha: 0, scale: 0.95, ease: 'none' }, 0);
     });
   }, { scope: container });
 
@@ -67,131 +95,128 @@ export default function Contact() {
   };
 
   return (
-    <section id="contact" ref={container} className="px-6 md:px-12 max-w-7xl mx-auto w-full">
-      <div
-        className="contact-card glass-panel-strong rounded-[2rem] p-8 md:p-16 relative overflow-hidden invisible"
-      >
-        {/* Decorative blur */}
-        <div className="absolute bottom-0 left-0 w-64 h-64 bg-white/5 rounded-full blur-[80px] translate-y-1/2 -translate-x-1/2" />
+    <section id="contact" ref={container} className="px-6 md:px-12 max-w-7xl mx-auto w-full pb-32 pt-20">
+      <div className="contact-container-wrapper">
+        <div className="contact-card glass-panel-strong rounded-[2rem] p-8 md:p-16 relative overflow-hidden">
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-white/5 rounded-full blur-[80px] translate-y-1/2 -translate-x-1/2" />
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 relative z-10">
-          <div>
-            <h2 className="text-sm font-mono uppercase tracking-[0.2em] text-white/40 mb-4">05 // Contact</h2>
-            <h3 className="text-4xl md:text-6xl font-display font-medium tracking-tight mb-6 text-gradient">
-              Let's build<br/>together.
-            </h3>
-            <p className="text-white/60 font-light text-lg mb-12 max-w-md">
-              Currently seeking ML/AI and SWE internship roles. Feel free to reach out if you're looking for a developer, have a question, or just want to connect.
-            </p>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 relative z-10">
+            <div>
+              <h2 className="contact-label text-sm font-mono uppercase tracking-[0.2em] text-white/40 mb-4">05 // Contact</h2>
+              <h3 className="contact-heading text-4xl md:text-6xl font-display font-medium tracking-tight mb-6 text-gradient">
+                Let's build<br/>together.
+              </h3>
+              <p className="contact-subtext text-white/60 font-light text-lg mb-12 max-w-md">
+                Currently seeking ML/AI and SWE internship roles. Feel free to reach out if you're looking for a developer, have a question, or just want to connect.
+              </p>
 
-            <div className="flex flex-col gap-6">
-              <a href="mailto:yadavdeepender65@gmail.com" className="flex items-center gap-3 md:gap-4 text-white/80 hover:text-white transition-colors group w-full md:w-fit">
-                <div className="shrink-0 w-10 h-10 md:w-12 md:h-12 rounded-full glass-panel flex items-center justify-center group-hover:bg-white group-hover:text-black transition-all">
-                  <Mail size={18} />
-                </div>
-                <span className="font-light text-sm md:text-lg break-all md:break-normal">yadavdeepender65@gmail.com</span>
-              </a>
-              <a href="tel:+917015878120" className="flex items-center gap-3 md:gap-4 text-white/80 hover:text-white transition-colors group w-full md:w-fit">
-                <div className="shrink-0 w-10 h-10 md:w-12 md:h-12 rounded-full glass-panel flex items-center justify-center group-hover:bg-white group-hover:text-black transition-all">
-                  <Phone size={18} />
-                </div>
-                <span className="font-light text-sm md:text-lg break-all md:break-normal">+91 7015878120</span>
-              </a>
-              <a href="https://www.linkedin.com/in/deepender25/" target="_blank" rel="noreferrer" className="flex items-center gap-3 md:gap-4 text-white/80 hover:text-white transition-colors group w-full md:w-fit">
-                <div className="shrink-0 w-10 h-10 md:w-12 md:h-12 rounded-full glass-panel flex items-center justify-center group-hover:bg-white group-hover:text-black transition-all">
-                  <Linkedin size={18} />
-                </div>
-                <span className="font-light text-sm md:text-lg break-all md:break-normal">linkedin.com/in/deepender25</span>
-              </a>
-            </div>
-          </div>
-
-          {/* Contact Form */}
-          <div className="glass-panel p-8 md:p-10 rounded-3xl">
-            <form onSubmit={handleSubmit} className="space-y-8">
-              <div className="space-y-6">
-                {/* Name */}
-                <div className="relative">
-                  <input
-                    type="text"
-                    id="name"
-                    required
-                    value={form.name}
-                    onChange={handleChange}
-                    className="peer w-full bg-transparent border-b border-white/20 py-3 text-white placeholder-transparent focus:outline-none focus:border-white transition-colors"
-                    placeholder="Name"
-                  />
-                  <label htmlFor="name" className="absolute left-0 top-3 text-white/40 text-sm font-light transition-all peer-focus:-top-4 peer-focus:text-xs peer-focus:text-white/60 peer-valid:-top-4 peer-valid:text-xs peer-valid:text-white/60">
-                    Your Name
-                  </label>
-                </div>
-
-                {/* Email */}
-                <div className="relative">
-                  <input
-                    type="email"
-                    id="email"
-                    required
-                    value={form.email}
-                    onChange={handleChange}
-                    className="peer w-full bg-transparent border-b border-white/20 py-3 text-white placeholder-transparent focus:outline-none focus:border-white transition-colors"
-                    placeholder="Email"
-                  />
-                  <label htmlFor="email" className="absolute left-0 top-3 text-white/40 text-sm font-light transition-all peer-focus:-top-4 peer-focus:text-xs peer-focus:text-white/60 peer-valid:-top-4 peer-valid:text-xs peer-valid:text-white/60">
-                    Your Email
-                  </label>
-                </div>
-
-                {/* Message */}
-                <div className="relative">
-                  <textarea
-                    id="message"
-                    rows={4}
-                    required
-                    value={form.message}
-                    onChange={handleChange}
-                    className="peer w-full bg-transparent border-b border-white/20 py-3 text-white placeholder-transparent focus:outline-none focus:border-white transition-colors resize-none"
-                    placeholder="Message"
-                  ></textarea>
-                  <label htmlFor="message" className="absolute left-0 top-3 text-white/40 text-sm font-light transition-all peer-focus:-top-4 peer-focus:text-xs peer-focus:text-white/60 peer-valid:-top-4 peer-valid:text-xs peer-valid:text-white/60">
-                    Message
-                  </label>
-                </div>
+              <div className="flex flex-col gap-6">
+                <a href="mailto:yadavdeepender65@gmail.com" className="contact-link flex items-center gap-3 md:gap-4 text-white/80 hover:text-white transition-colors group w-full md:w-fit">
+                  <div className="shrink-0 w-10 h-10 md:w-12 md:h-12 rounded-full glass-panel flex items-center justify-center group-hover:bg-white group-hover:text-black transition-all">
+                    <Mail size={18} />
+                  </div>
+                  <span className="font-light text-sm md:text-lg break-all md:break-normal">yadavdeepender65@gmail.com</span>
+                </a>
+                <a href="tel:+917015878120" className="contact-link flex items-center gap-3 md:gap-4 text-white/80 hover:text-white transition-colors group w-full md:w-fit">
+                  <div className="shrink-0 w-10 h-10 md:w-12 md:h-12 rounded-full glass-panel flex items-center justify-center group-hover:bg-white group-hover:text-black transition-all">
+                    <Phone size={18} />
+                  </div>
+                  <span className="font-light text-sm md:text-lg break-all md:break-normal">+91 7015878120</span>
+                </a>
+                <a href="https://www.linkedin.com/in/deepender25/" target="_blank" rel="noreferrer" className="contact-link flex items-center gap-3 md:gap-4 text-white/80 hover:text-white transition-colors group w-full md:w-fit">
+                  <div className="shrink-0 w-10 h-10 md:w-12 md:h-12 rounded-full glass-panel flex items-center justify-center group-hover:bg-white group-hover:text-black transition-all">
+                    <Linkedin size={18} />
+                  </div>
+                  <span className="font-light text-sm md:text-lg break-all md:break-normal">linkedin.com/in/deepender25</span>
+                </a>
               </div>
+            </div>
 
-              {/* Status feedback */}
-              {status === 'success' && (
-                <div className="flex items-center gap-2 text-green-400 text-sm animate-in fade-in slide-in-from-top-2">
-                  <CheckCircle2 size={16} />
-                  Message sent! I'll get back to you soon.
-                </div>
-              )}
-              {status === 'error' && (
-                <div className="flex items-center gap-2 text-red-400 text-sm animate-in fade-in slide-in-from-top-2">
-                  <XCircle size={16} />
-                  {errorMsg}
-                </div>
-              )}
+            <div className="contact-form-panel glass-panel p-8 md:p-10 rounded-3xl">
+              <form onSubmit={handleSubmit} className="space-y-8">
+                <div className="space-y-6">
+                  {/* Name */}
+                  <div className="relative">
+                    <input
+                      type="text"
+                      id="name"
+                      required
+                      value={form.name}
+                      onChange={handleChange}
+                      className="peer w-full bg-transparent border-b border-white/20 py-3 text-white placeholder-transparent focus:outline-none focus:border-white transition-colors"
+                      placeholder="Name"
+                    />
+                    <label htmlFor="name" className="absolute left-0 top-3 text-white/40 text-sm font-light transition-all peer-focus:-top-4 peer-focus:text-xs peer-focus:text-white/60 peer-valid:-top-4 peer-valid:text-xs peer-valid:text-white/60">
+                      Your Name
+                    </label>
+                  </div>
 
-              <button
-                type="submit"
-                disabled={status === 'submitting'}
-                className="w-full flex justify-center items-center gap-2 bg-white text-black px-8 py-4 rounded-xl text-sm font-medium hover:bg-white/90 transition-all disabled:opacity-50 hover:scale-[1.02] active:scale-[0.98]"
-              >
-                {status === 'idle' && <><span>Send Message</span><ArrowRight size={16} /></>}
-                {status === 'submitting' && (
-                  <span className="flex items-center gap-2">
-                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
-                    </svg>
-                    Sending…
-                  </span>
+                  {/* Email */}
+                  <div className="relative">
+                    <input
+                      type="email"
+                      id="email"
+                      required
+                      value={form.email}
+                      onChange={handleChange}
+                      className="peer w-full bg-transparent border-b border-white/20 py-3 text-white placeholder-transparent focus:outline-none focus:border-white transition-colors"
+                      placeholder="Email"
+                    />
+                    <label htmlFor="email" className="absolute left-0 top-3 text-white/40 text-sm font-light transition-all peer-focus:-top-4 peer-focus:text-xs peer-focus:text-white/60 peer-valid:-top-4 peer-valid:text-xs peer-valid:text-white/60">
+                      Your Email
+                    </label>
+                  </div>
+
+                  {/* Message */}
+                  <div className="relative">
+                    <textarea
+                      id="message"
+                      rows={4}
+                      required
+                      value={form.message}
+                      onChange={handleChange}
+                      className="peer w-full bg-transparent border-b border-white/20 py-3 text-white placeholder-transparent focus:outline-none focus:border-white transition-colors resize-none"
+                      placeholder="Message"
+                    ></textarea>
+                    <label htmlFor="message" className="absolute left-0 top-3 text-white/40 text-sm font-light transition-all peer-focus:-top-4 peer-focus:text-xs peer-focus:text-white/60 peer-valid:-top-4 peer-valid:text-xs peer-valid:text-white/60">
+                      Message
+                    </label>
+                  </div>
+                </div>
+
+                {status === 'success' && (
+                  <div className="flex items-center gap-2 text-green-400 text-sm animate-in fade-in slide-in-from-top-2">
+                    <CheckCircle2 size={16} />
+                    Message sent! I'll get back to you soon.
+                  </div>
                 )}
-                {status === 'success' && 'Sent!'}
-                {status === 'error' && 'Try Again'}
-              </button>
-            </form>
+                {status === 'error' && (
+                  <div className="flex items-center gap-2 text-red-400 text-sm animate-in fade-in slide-in-from-top-2">
+                    <XCircle size={16} />
+                    {errorMsg}
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={status === 'submitting'}
+                  className="w-full flex justify-center items-center gap-2 bg-white text-black px-8 py-4 rounded-xl text-sm font-medium hover:bg-white/90 transition-all disabled:opacity-50 hover:scale-[1.02] active:scale-[0.98]"
+                >
+                  {status === 'idle' && <><span>Send Message</span><ArrowRight size={16} /></>}
+                  {status === 'submitting' && (
+                    <span className="flex items-center gap-2">
+                      <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+                      </svg>
+                      Sending…
+                    </span>
+                  )}
+                  {status === 'success' && 'Sent!'}
+                  {status === 'error' && 'Try Again'}
+                </button>
+              </form>
+            </div>
           </div>
         </div>
       </div>
