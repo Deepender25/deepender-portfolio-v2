@@ -1,4 +1,5 @@
 import { useRef } from 'react';
+import portfolioData from '../data/portfolio.json';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -65,25 +66,24 @@ export default function About() {
             </div>
             
             <div className="md:col-span-8 space-y-6 text-white/70 font-light leading-relaxed text-lg">
-              <p className="about-para">
-                Currently pursuing my B.Tech in Computer Science &amp; Engineering (AI/ML) at Gurugram University (CGPA: 8.5/10). My focus lies at the intersection of machine learning and full-stack development.
-              </p>
-              <p className="about-para">
-                I specialize in building agentic LLM pipelines, RAG systems, and robust web applications. Whether it's optimizing multi-step reasoning tasks or engineering hands-free HCI systems, I thrive on solving complex technical challenges.
-              </p>
+              {portfolioData.about.paragraphs.map((para, i) => (
+                <p key={i} className="about-para">
+                  {para}
+                </p>
+              ))}
               
               <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 gap-6 pt-8 border-t border-white/10">
                 <div className="about-mini-card glass-panel p-6 rounded-2xl">
                   <h4 className="text-sm font-mono text-white/40 uppercase tracking-widest mb-3">Education</h4>
-                  <p className="text-white/90 font-medium">B.Tech CS &amp; Eng (AI/ML)</p>
-                  <p className="text-white/60 text-sm mt-1">Gurugram University<br/>2023 – 2027</p>
+                  <p className="text-white/90 font-medium">{portfolioData.about.education.degree}</p>
+                  <p className="text-white/60 text-sm mt-1">{portfolioData.about.education.university}<br/>{portfolioData.about.education.duration}</p>
                 </div>
                 <div className="about-mini-card glass-panel p-6 rounded-2xl">
                   <h4 className="text-sm font-mono text-white/40 uppercase tracking-widest mb-3">Certifications</h4>
                   <ul className="text-white/80 text-sm space-y-2 font-medium">
-                    <li>Claude Code in Action</li>
-                    <li>Oracle Cloud Infrastructure</li>
-                    <li>AWS Solutions Architecture</li>
+                    {portfolioData.about.certifications.map((cert, i) => (
+                      <li key={i}>{cert}</li>
+                    ))}
                   </ul>
                 </div>
               </div>

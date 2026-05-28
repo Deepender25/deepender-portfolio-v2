@@ -1,17 +1,12 @@
 import { useRef } from 'react';
+import portfolioData from '../data/portfolio.json';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 
-const skillCategories = [
-  { title: "Languages",        skills: ["Python", "TypeScript", "JavaScript", "SQL"],                                                                                          className: "md:col-span-4"  },
-  { title: "AI / ML",          skills: ["Machine Learning", "LLMs", "RAG", "Prompt Engineering", "LangChain", "Hugging Face", "PyTorch", "Scikit-learn", "Computer Vision"], className: "md:col-span-8"  },
-  { title: "Web & Backend",    skills: ["Next.js", "React.js", "FastAPI", "Flask", "REST API", "Tailwind CSS", "Serverless"],                                                 className: "md:col-span-7"  },
-  { title: "Databases & Cloud",skills: ["PostgreSQL", "ChromaDB", "Supabase", "Vercel"],                                                                                      className: "md:col-span-5"  },
-  { title: "Tools & Practices",skills: ["Git", "Docker", "CI/CD", "JWT", "OAuth 2.0", "Web Scraping", "Linux"],                                                               className: "md:col-span-12" },
-];
+
 
 export default function Skills() {
   const container = useRef<HTMLElement>(null);
@@ -63,7 +58,7 @@ export default function Skills() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6">
-          {skillCategories.map((category, index) => (
+          {portfolioData.skills.map((category, index) => (
             <div key={index} className={category.className}>
               <div className="skill-card glass-panel p-8 rounded-3xl hover:bg-white/[0.04] transition-colors h-full">
                 <h4 className="text-xs font-mono text-white/40 uppercase tracking-widest mb-6">

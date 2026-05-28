@@ -1,4 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
+import portfolioData from '../data/portfolio.json';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -7,93 +8,12 @@ import {
   Bot, Newspaper, FileText, MonitorPlay, CalendarCheck,
   Subtitles, Scissors, MessageSquare, MousePointer2,
 } from 'lucide-react';
+import * as Icons from 'lucide-react';
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 
 /* ─────────────────────────── Data ─────────────────────────────────────── */
-const featuredProjects = [
-  {
-    title: 'Readme Architect AI',
-    description: 'SaaS app generating professional GitHub READMEs with Google Gemini AI. Shipped GitHub OAuth, private repo support, JWT auth, dynamic sitemap, and Google Analytics.',
-    tech: ['Next.js', 'TypeScript', 'Gemini API', 'PostgreSQL', 'Tailwind'],
-    github: 'https://github.com/Deepender25/Readme-Architect-AI',
-    live: 'https://readmearchitect.vercel.app',
-    video: 'https://www.youtube.com/embed/7Xc5ZwdG3RM',
-    icon: FileText,
-  },
-  {
-    title: 'Campus Chatbot',
-    description: 'AI-powered multilingual chatbot for campus information. Features Gemini LLM, dynamic knowledge base, Telegram/web interfaces, and a secure admin dashboard.',
-    tech: ['Next.js', 'React', 'Flask', 'Python', 'Supabase', 'ChromaDB', 'Gemini API', 'LangChain'],
-    github: 'https://github.com/Deepender25/Campus_Chatbot',
-    live: '#',
-    video: 'https://www.youtube.com/embed/MzEFeIRJ0eQ',
-    icon: MessageSquare,
-  },
-  {
-    title: 'CursorViaCam',
-    description: 'AI-powered head tracking mouse control system for hands-free computer interaction — designed to assist users with motor impairments.',
-    tech: ['Python', 'PyQt6', 'OpenCV', 'Mediapipe', 'PyAutoGUI', 'NumPy', 'Pywin32'],
-    github: 'https://github.com/Deepender25/CursorViaCam',
-    live: '#',
-    video: 'https://www.youtube.com/embed/MzEFeIRJ0eQ',
-    icon: MousePointer2,
-  },
-  {
-    title: 'Buddy',
-    description: 'AI text assistant for Android — type /fix, /formal, /reply or any custom trigger at the end of text in any app, and Buddy rewrites it instantly using Gemini.',
-    tech: ['Kotlin', 'Python', 'Jetpack Compose', 'Coroutines', 'AES-256-GCM'],
-    github: 'https://github.com/Deepender25/Buddy',
-    live: '#',
-    video: 'https://www.youtube.com/embed/MzEFeIRJ0eQ',
-    icon: Bot,
-  },
-  {
-    title: 'AI-Attendance',
-    description: 'An AI-powered attendance tracker that turns uploaded schedules into a beautiful, interactive dashboard for managing your classes.',
-    tech: ['React 19', 'TypeScript', 'Tailwind', 'Express.js', 'Gemini API', 'Python'],
-    github: 'https://github.com/Deepender25/AI-Attendance',
-    live: 'https://attendsight.vercel.app/login',
-    video: 'https://www.youtube.com/embed/MzEFeIRJ0eQ',
-    icon: CalendarCheck,
-  },
-  {
-    title: 'Presenta',
-    description: 'Create stunning video mockups and screenshots with professional device frames and smooth scrolling animations directly in your browser.',
-    tech: ['Python', 'FastAPI', 'Vanilla JS', 'HTML5 Canvas', 'Vercel'],
-    github: 'https://github.com/Deepender25/Presenta',
-    live: 'https://presenta-studio.vercel.app',
-    video: 'https://www.youtube.com/embed/MzEFeIRJ0eQ',
-    icon: MonitorPlay,
-  },
-  {
-    title: 'AI-news-Automation',
-    description: 'Automated AI news aggregator that fetches, summarizes, and emails daily tech briefings using Google Gemini AI and Vercel serverless functions.',
-    tech: ['Python', 'Gemini API', 'RSS', 'Web Scraping', 'Vercel'],
-    github: 'https://github.com/Deepender25/AI-news-Automation',
-    live: '#',
-    video: 'https://www.youtube.com/embed/MzEFeIRJ0eQ',
-    icon: Newspaper,
-  },
-  {
-    title: 'Video-to-Shorts',
-    description: 'Converts long-form videos into short-form content with AI-generated subtitles. Powered by Gemini API for intelligent content analysis and subtitle generation.',
-    tech: ['React', 'TypeScript', 'Python', 'Flask', 'Whisper', 'FFmpeg', 'Gemini API'],
-    github: 'https://github.com/Deepender25/Video-to-Shorts',
-    live: '#',
-    video: 'https://www.youtube.com/embed/MzEFeIRJ0eQ',
-    icon: Scissors,
-  },
-  {
-    title: 'Sub-Gen',
-    description: 'AI-powered video subtitle generation tool that automatically transcribes and generates subtitles using speech-to-text. Supports Hindi and Hinglish.',
-    tech: ['React', 'TypeScript', 'Python', 'Flask', 'Whisper', 'FFmpeg', 'Gemini API'],
-    github: 'https://github.com/Deepender25/Sub-Gen',
-    live: '#',
-    video: 'https://www.youtube.com/embed/MzEFeIRJ0eQ',
-    icon: Subtitles,
-  },
-];
+const featuredProjects = portfolioData.projects;
 
 const TOTAL = featuredProjects.length;
 const SCROLL_PER_CARD = 500; // pixels of scroll per card
@@ -632,7 +552,7 @@ export default function Projects() {
           }}
         >
           {featuredProjects.map((project, idx) => {
-            const Icon = project.icon;
+            const Icon = (Icons as any)[project.icon];
             const isFront = idx === displayIdx;
             const playing = isFront && videoUrl === project.video;
 

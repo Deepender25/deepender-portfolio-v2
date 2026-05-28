@@ -1,31 +1,12 @@
 import { useRef } from 'react';
+import portfolioData from '../data/portfolio.json';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 
-const experiences = [
-  {
-    role: "AI/ML Intern",
-    company: "RationalGo AI",
-    period: "Jun 2025 – Aug 2025",
-    description: [
-      "Shipped 3+ internal tools and product features — including workflow automation utilities and marketing efficiency tools.",
-      "Built and optimized agentic LLM pipelines using prompt engineering and LLM evaluation, improving output quality.",
-      "Contributed to product testing, bug fixing, and performance optimization, collaborating on backend AI logic."
-    ]
-  },
-  {
-    role: "Head of Data Collection",
-    company: "Training & Placement Office, Gurugram University",
-    period: "Feb 2026 – Present",
-    description: [
-      "Led a team of 4–5 members to scrape, clean, and maintain a structured database of 300+ company profiles.",
-      "Built automated data pipelines cutting manual data entry time by ~40%, supporting placement drive coordination."
-    ]
-  }
-];
+
 
 export default function Experience() {
   const container = useRef<HTMLElement>(null);
@@ -77,7 +58,7 @@ export default function Experience() {
         </div>
         
         <div className="space-y-6">
-          {experiences.map((exp, index) => (
+          {portfolioData.experience.map((exp, index) => (
             <div key={index}>
               <div className="experience-card glass-panel p-8 md:p-10 rounded-3xl relative overflow-hidden group">
                 <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">

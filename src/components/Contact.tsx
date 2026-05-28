@@ -1,4 +1,5 @@
 import React, { useRef, useState } from 'react';
+import portfolioData from '../data/portfolio.json';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -107,27 +108,27 @@ export default function Contact() {
                 Let's build<br/>together.
               </h3>
               <p className="contact-subtext text-white/60 font-light text-lg mb-12 max-w-md">
-                Currently seeking ML/AI and SWE internship roles. Feel free to reach out if you're looking for a developer, have a question, or just want to connect.
+                {portfolioData.contact.text}
               </p>
 
               <div className="flex flex-col gap-6">
-                <a href="mailto:yadavdeepender65@gmail.com" className="contact-link flex items-center gap-3 md:gap-4 text-white/80 hover:text-white transition-colors group w-full md:w-fit">
+                <a href={`mailto:${portfolioData.contact.email}`} className="contact-link flex items-center gap-3 md:gap-4 text-white/80 hover:text-white transition-colors group w-full md:w-fit">
                   <div className="shrink-0 w-10 h-10 md:w-12 md:h-12 rounded-full glass-panel flex items-center justify-center group-hover:bg-white group-hover:text-black transition-all">
                     <Mail size={18} />
                   </div>
-                  <span className="font-light text-sm md:text-lg break-all md:break-normal">yadavdeepender65@gmail.com</span>
+                  <span className="font-light text-sm md:text-lg break-all md:break-normal">{portfolioData.contact.email}</span>
                 </a>
-                <a href="tel:+917015878120" className="contact-link flex items-center gap-3 md:gap-4 text-white/80 hover:text-white transition-colors group w-full md:w-fit">
+                <a href={`tel:${portfolioData.contact.phone.replace(/\s+/g, '')}`} className="contact-link flex items-center gap-3 md:gap-4 text-white/80 hover:text-white transition-colors group w-full md:w-fit">
                   <div className="shrink-0 w-10 h-10 md:w-12 md:h-12 rounded-full glass-panel flex items-center justify-center group-hover:bg-white group-hover:text-black transition-all">
                     <Phone size={18} />
                   </div>
-                  <span className="font-light text-sm md:text-lg break-all md:break-normal">+91 7015878120</span>
+                  <span className="font-light text-sm md:text-lg break-all md:break-normal">{portfolioData.contact.phone}</span>
                 </a>
-                <a href="https://www.linkedin.com/in/deepender25/" target="_blank" rel="noreferrer" className="contact-link flex items-center gap-3 md:gap-4 text-white/80 hover:text-white transition-colors group w-full md:w-fit">
+                <a href={portfolioData.contact.linkedinUrl} target="_blank" rel="noreferrer" className="contact-link flex items-center gap-3 md:gap-4 text-white/80 hover:text-white transition-colors group w-full md:w-fit">
                   <div className="shrink-0 w-10 h-10 md:w-12 md:h-12 rounded-full glass-panel flex items-center justify-center group-hover:bg-white group-hover:text-black transition-all">
                     <Linkedin size={18} />
                   </div>
-                  <span className="font-light text-sm md:text-lg break-all md:break-normal">linkedin.com/in/deepender25</span>
+                  <span className="font-light text-sm md:text-lg break-all md:break-normal">{portfolioData.contact.linkedin}</span>
                 </a>
               </div>
             </div>

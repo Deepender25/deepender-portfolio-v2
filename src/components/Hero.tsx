@@ -1,4 +1,5 @@
 import { useRef } from 'react';
+import portfolioData from '../data/portfolio.json';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -140,7 +141,7 @@ export default function Hero() {
               <div className="hero-badge inline-flex items-center gap-3 glass-panel px-4 py-2 rounded-full mb-8">
                 <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
                 <p className="font-mono text-xs text-white/80 uppercase tracking-widest">
-                  Available for Internships
+                  {portfolioData.hero.badgeText}
                 </p>
               </div>
             </div>
@@ -148,13 +149,13 @@ export default function Hero() {
             <div>
               <div className="hero-title-1-wrapper">
                 <h1 className="hero-title-1 text-5xl md:text-7xl lg:text-[7rem] font-display font-medium tracking-tighter leading-[1.05]">
-                  <ScrambleText text="Deepender" delay={300} className="text-gradient" />
+                  <ScrambleText text={portfolioData.hero.titleLine1} delay={300} className="text-gradient" />
                 </h1>
               </div>
               <div className="flex flex-col md:flex-row md:items-center gap-6 md:gap-8 mt-2">
                 <div className="hero-title-2-wrapper">
                   <h1 className="hero-title-2 text-5xl md:text-7xl lg:text-[7rem] font-display font-medium tracking-tighter leading-[1.05] italic font-light text-white/60">
-                    <ScrambleText text="Yadav." delay={1500} />
+                    <ScrambleText text={portfolioData.hero.titleLine2} delay={1500} />
                   </h1>
                 </div>
 
@@ -169,9 +170,9 @@ export default function Hero() {
                     </a>
                     <div className="flex items-center gap-3 md:gap-4">
                       {[
-                        { icon: Github, href: "https://github.com/Deepender25" },
-                        { icon: Linkedin, href: "https://www.linkedin.com/in/deepender25/" },
-                        { icon: Mail, href: "mailto:yadavdeepender65@gmail.com" }
+                        { icon: Github, href: portfolioData.hero.social.github },
+                        { icon: Linkedin, href: portfolioData.hero.social.linkedin },
+                        { icon: Mail, href: portfolioData.hero.social.email }
                       ].map((social, i) => (
                         <a
                           key={i}
@@ -196,10 +197,10 @@ export default function Hero() {
           <div className="hero-panel w-full glass-panel p-8 md:p-12 rounded-[2rem] relative overflow-hidden">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16">
               <p className="text-xl md:text-2xl text-white/80 font-light leading-relaxed">
-                Crafting production-grade machine learning pipelines, agentic LLM systems, and full-stack web applications.
+                {portfolioData.hero.description1}
               </p>
               <p className="text-base md:text-lg text-white/50 font-light leading-relaxed">
-                I specialize in bridging the gap between complex AI models and intuitive user experiences. Currently pursuing my B.Tech in Computer Science & Engineering (AI/ML) at Gurugram University, I am passionate about building scalable solutions that solve real-world problems.
+                {portfolioData.hero.description2}
               </p>
             </div>
           </div>
