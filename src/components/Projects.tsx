@@ -301,7 +301,7 @@ export default function Projects() {
   };
 
   /* ── Advance one card forward ────────────────────────────────────────── */
-  const goNext = (onDone?: () => void) => {
+  const goNext = (onDone?: () => void, fromUI: boolean = false) => {
     const isFS = !!(
       document.fullscreenElement ||
       (document as any).webkitFullscreenElement ||
@@ -316,8 +316,8 @@ export default function Projects() {
     const c = cards();
     const nxt = cur + 1;
 
-    // Sync scroll position silently (ScrollTrigger ignores this while isAnim is true)
-    if (stRef.current) {
+    // Sync scroll position silently ONLY if triggered by the button
+    if (fromUI && stRef.current) {
       const targetPx = 300 + nxt * SCROLL_PER_CARD; // 300 is BUFFER
       window.scrollTo({ top: stRef.current.start + targetPx, behavior: 'instant' as ScrollBehavior });
     }
@@ -368,7 +368,7 @@ export default function Projects() {
   };
 
   /* ── Go one card backward ────────────────────────────────────────────── */
-  const goPrev = (onDone?: () => void) => {
+  const goPrev = (onDone?: () => void, fromUI: boolean = false) => {
     const isFS = !!(
       document.fullscreenElement ||
       (document as any).webkitFullscreenElement ||
@@ -383,8 +383,8 @@ export default function Projects() {
     const c = cards();
     const prv = cur - 1;
 
-    // Sync scroll position silently (ScrollTrigger ignores this while isAnim is true)
-    if (stRef.current) {
+    // Sync scroll position silently ONLY if triggered by the button
+    if (fromUI && stRef.current) {
       const targetPx = 300 + prv * SCROLL_PER_CARD; // 300 is BUFFER
       window.scrollTo({ top: stRef.current.start + targetPx, behavior: 'instant' as ScrollBehavior });
     }
@@ -579,7 +579,7 @@ export default function Projects() {
     <section
       id="projects"
       ref={container}
-      className="w-full px-6 md:px-12 max-w-7xl mx-auto h-screen flex flex-col"
+      className="w-full px-6 md:px-12 max-w-7xl mx-auto h-screen flex flex-col relative z-50 mt-12 md:mt-16"
     >
       {/* Scoped override during video fullscreen to prevent browser iframe reload and exit jitter */}
       {isFullscreen && (
@@ -747,7 +747,7 @@ export default function Projects() {
         {/* ── Nav controls ───────────────────────────────────────────────── */}
         <div className="flex items-center gap-8 mt-10 shrink-0">
           <button
-            onClick={() => displayIdx > 0 && goPrevRef.current()}
+            onClick={() => displayIdx > 0 && goPrevRef.current(undefined, true)}
             aria-label="Previous project"
             disabled={displayIdx === 0}
             className={`w-14 h-14 rounded-full flex items-center justify-center border transition-all ${
@@ -766,7 +766,7 @@ export default function Projects() {
           </div>
 
           <button
-            onClick={() => displayIdx < TOTAL - 1 && goNextRef.current()}
+            onClick={() => displayIdx < TOTAL - 1 && goNextRef.current(undefined, true)}
             aria-label="Next project"
             disabled={displayIdx === TOTAL - 1}
             className={`w-14 h-14 rounded-full flex items-center justify-center border transition-all ${

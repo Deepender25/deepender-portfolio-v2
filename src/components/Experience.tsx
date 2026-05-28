@@ -43,7 +43,7 @@ export default function Experience() {
       const tlIn = gsap.timeline({
         scrollTrigger: {
           trigger: container.current,
-          start: 'top 75%',
+          start: 'top 95%',
           toggleActions: 'play none none reverse',
         },
       });
@@ -64,12 +64,12 @@ export default function Experience() {
 
       tlOut.fromTo('.exp-container-wrapper',
         { y: 0, autoAlpha: 1, scale: 1, immediateRender: false },
-        { y: -150, autoAlpha: 0, scale: 0.95, ease: 'none' }, 0);
+        { y: 100, autoAlpha: 0, scale: 0.9, ease: 'none' }, 0);
     });
   }, { scope: container });
 
   return (
-    <section id="experience" ref={container} className="px-6 md:px-12 max-w-7xl mx-auto w-full pb-20 pt-20">
+    <section id="experience" ref={container} className="px-6 md:px-12 max-w-7xl mx-auto w-full mt-12 md:mt-16 relative z-40">
       <div className="exp-container-wrapper">
         <div className="mb-12">
           <h2 className="exp-label text-sm font-mono uppercase tracking-[0.2em] text-white/40 mb-2">03 // Experience</h2>

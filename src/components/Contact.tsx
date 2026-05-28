@@ -35,7 +35,7 @@ export default function Contact() {
       const tlIn = gsap.timeline({
         scrollTrigger: {
           trigger: container.current,
-          start: 'top 75%',
+          start: 'top 95%',
           toggleActions: 'play none none reverse',
         },
       });
@@ -58,7 +58,7 @@ export default function Contact() {
 
       tlOut.fromTo('.contact-container-wrapper',
         { y: 0, autoAlpha: 1, scale: 1, immediateRender: false },
-        { y: -150, autoAlpha: 0, scale: 0.95, ease: 'none' }, 0);
+        { y: 100, autoAlpha: 0, scale: 0.9, ease: 'none' }, 0);
     });
   }, { scope: container });
 
@@ -95,7 +95,7 @@ export default function Contact() {
   };
 
   return (
-    <section id="contact" ref={container} className="px-6 md:px-12 max-w-7xl mx-auto w-full pb-32 pt-20">
+    <section id="contact" ref={container} className="px-6 md:px-12 max-w-7xl mx-auto w-full mt-12 md:mt-16 pb-20 relative z-[60]">
       <div className="contact-container-wrapper">
         <div className="contact-card glass-panel-strong rounded-[2rem] p-8 md:p-16 relative overflow-hidden">
           <div className="absolute bottom-0 left-0 w-64 h-64 bg-white/5 rounded-full blur-[80px] translate-y-1/2 -translate-x-1/2" />

@@ -22,7 +22,7 @@ export default function About() {
       const tlIn = gsap.timeline({
         scrollTrigger: {
           trigger: container.current,
-          start: 'top 75%',
+          start: 'top 95%',
           toggleActions: 'play none none reverse', // Resets cleanly when scrolling way up
         },
       });
@@ -44,12 +44,12 @@ export default function About() {
 
       tlOut.fromTo('.about-card-wrapper',
         { y: 0, autoAlpha: 1, scale: 1, immediateRender: false },
-        { y: -150, autoAlpha: 0, scale: 0.95, ease: 'none' }, 0);
+        { y: 100, autoAlpha: 0, scale: 0.9, ease: 'none' }, 0);
     });
   }, { scope: container });
 
   return (
-    <section id="about" ref={container} className="px-6 md:px-12 max-w-7xl mx-auto w-full pb-20">
+    <section id="about" ref={container} className="px-6 md:px-12 max-w-7xl mx-auto w-full relative z-20">
       <div className="about-card-wrapper">
         <div className="about-card glass-panel-strong rounded-[2rem] p-8 md:p-16 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2" />
