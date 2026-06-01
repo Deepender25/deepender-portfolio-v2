@@ -1,11 +1,6 @@
 import React, { useRef, useState } from 'react';
 import portfolioData from '../data/portfolio.json';
-import gsap from 'gsap';
-import { useGSAP } from '@gsap/react';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { ArrowRight, CheckCircle2, Github, Linkedin, Mail, Phone, XCircle } from 'lucide-react';
-
-gsap.registerPlugin(useGSAP, ScrollTrigger);
 
 interface FormState {
   name: string;
@@ -20,48 +15,6 @@ export default function Contact() {
   const [form, setForm] = useState<FormState>({ name: '', email: '', message: '' });
   const [status, setStatus] = useState<Status>('idle');
   const [errorMsg, setErrorMsg] = useState('');
-
-  useGSAP(() => {
-    const mm = gsap.matchMedia();
-
-    mm.add('(min-width: 768px)', () => {
-      // 1. Initial states for Entrance
-      gsap.set('.contact-label',   { autoAlpha: 0, y: 40 });
-      gsap.set('.contact-heading', { autoAlpha: 0, y: 40 });
-      gsap.set('.contact-subtext', { autoAlpha: 0, y: 40 });
-      gsap.set('.contact-link',    { autoAlpha: 0, y: 40 });
-      gsap.set('.contact-form-panel',{ autoAlpha: 0, y: 40 });
-
-      // 2. Entrance Timeline (Consistent with Hero & others)
-      const tlIn = gsap.timeline({
-        scrollTrigger: {
-          trigger: container.current,
-          start: 'top 95%',
-          toggleActions: 'play none none reverse',
-        },
-      });
-
-      tlIn.to('.contact-label', { autoAlpha: 1, y: 0, duration: 1.0, ease: 'power4.out' })
-          .to('.contact-heading', { autoAlpha: 1, y: 0, duration: 1.2, ease: 'power4.out' }, '-=0.8')
-          .to('.contact-subtext', { autoAlpha: 1, y: 0, duration: 1.2, ease: 'power4.out' }, '-=1.0')
-          .to('.contact-link', { autoAlpha: 1, y: 0, duration: 1.2, ease: 'power4.out', stagger: 0.1 }, '-=0.9')
-          .to('.contact-form-panel', { autoAlpha: 1, y: 0, duration: 1.2, ease: 'power4.out' }, '-=1.0');
-
-      // 3. Parallax Exit Timeline (Whole Container)
-      const tlOut = gsap.timeline({
-        scrollTrigger: {
-          trigger: container.current,
-          start: 'top 15%',
-          end: 'bottom top',
-          scrub: 1.2,
-        },
-      });
-
-      tlOut.fromTo('.contact-container-wrapper',
-        { y: 0, autoAlpha: 1, scale: 1, immediateRender: false },
-        { y: 100, autoAlpha: 0, scale: 0.9, ease: 'none' }, 0);
-    });
-  }, { scope: container });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setForm(prev => ({ ...prev, [e.target.id]: e.target.value }));

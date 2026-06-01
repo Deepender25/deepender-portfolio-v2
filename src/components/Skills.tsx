@@ -1,53 +1,8 @@
 import { useRef } from 'react';
 import portfolioData from '../data/portfolio.json';
-import gsap from 'gsap';
-import { useGSAP } from '@gsap/react';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
-
-gsap.registerPlugin(useGSAP, ScrollTrigger);
-
-
 
 export default function Skills() {
   const container = useRef<HTMLElement>(null);
-
-  useGSAP(() => {
-    const mm = gsap.matchMedia();
-
-    mm.add('(min-width: 768px)', () => {
-      // 1. Initial states for Entrance
-      gsap.set('.skills-label',   { autoAlpha: 0, y: 40 });
-      gsap.set('.skills-heading', { autoAlpha: 0, y: 40 });
-      gsap.set('.skill-card',     { autoAlpha: 0, y: 40 });
-
-      // 2. Entrance Timeline (Consistent with Hero & About)
-      const tlIn = gsap.timeline({
-        scrollTrigger: {
-          trigger: container.current,
-          start: 'top 95%',
-          toggleActions: 'play none none reverse',
-        },
-      });
-
-      tlIn.to('.skills-label', { autoAlpha: 1, y: 0, duration: 1.0, ease: 'power4.out' })
-          .to('.skills-heading', { autoAlpha: 1, y: 0, duration: 1.2, ease: 'power4.out' }, '-=0.8')
-          .to('.skill-card', { autoAlpha: 1, y: 0, duration: 1.2, ease: 'power4.out', stagger: 0.1 }, '-=0.9');
-
-      // 3. Parallax Exit Timeline (Whole Container)
-      const tlOut = gsap.timeline({
-        scrollTrigger: {
-          trigger: container.current,
-          start: 'top 15%',
-          end: 'bottom top',
-          scrub: 1.2,
-        },
-      });
-
-      tlOut.fromTo('.skills-container-wrapper',
-        { y: 0, autoAlpha: 1, scale: 1, immediateRender: false },
-        { y: 100, autoAlpha: 0, scale: 0.9, ease: 'none' }, 0);
-    });
-  }, { scope: container });
 
   return (
     <section id="skills" ref={container} className="px-6 md:px-12 max-w-7xl mx-auto w-full mt-12 md:mt-16 relative z-30">

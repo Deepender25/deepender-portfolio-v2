@@ -1,53 +1,8 @@
 import { useRef } from 'react';
 import portfolioData from '../data/portfolio.json';
-import gsap from 'gsap';
-import { useGSAP } from '@gsap/react';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
-
-gsap.registerPlugin(useGSAP, ScrollTrigger);
-
-
 
 export default function Experience() {
   const container = useRef<HTMLElement>(null);
-
-  useGSAP(() => {
-    const mm = gsap.matchMedia();
-
-    mm.add('(min-width: 768px)', () => {
-      // 1. Initial states (Changed to y: 40 for perfect consistency with all other sections)
-      gsap.set('.exp-label',      { autoAlpha: 0, y: 40 });
-      gsap.set('.exp-heading',    { autoAlpha: 0, y: 40 });
-      gsap.set('.experience-card',{ autoAlpha: 0, y: 40 }); // Changed from x: -20 to y: 40
-
-      // 2. Entrance Animation (Snappy, resets on scroll up)
-      const tlIn = gsap.timeline({
-        scrollTrigger: {
-          trigger: container.current,
-          start: 'top 95%',
-          toggleActions: 'play none none reverse',
-        },
-      });
-
-      tlIn.to('.exp-label', { autoAlpha: 1, y: 0, duration: 1.0, ease: 'power4.out' })
-          .to('.exp-heading', { autoAlpha: 1, y: 0, duration: 1.2, ease: 'power4.out' }, '-=0.8')
-          .to('.experience-card', { autoAlpha: 1, y: 0, duration: 1.2, ease: 'power4.out', stagger: 0.15 }, '-=0.9');
-
-      // 3. Parallax Exit (Whole Container)
-      const tlOut = gsap.timeline({
-        scrollTrigger: {
-          trigger: container.current,
-          start: 'top 15%',
-          end: 'bottom top',
-          scrub: 1.2,
-        },
-      });
-
-      tlOut.fromTo('.exp-container-wrapper',
-        { y: 0, autoAlpha: 1, scale: 1, immediateRender: false },
-        { y: 100, autoAlpha: 0, scale: 0.9, ease: 'none' }, 0);
-    });
-  }, { scope: container });
 
   return (
     <section id="experience" ref={container} className="px-6 md:px-12 max-w-7xl mx-auto w-full mt-12 md:mt-16 relative z-40">

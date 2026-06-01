@@ -1,53 +1,8 @@
 import { useRef } from 'react';
 import portfolioData from '../data/portfolio.json';
-import gsap from 'gsap';
-import { useGSAP } from '@gsap/react';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
-
-gsap.registerPlugin(useGSAP, ScrollTrigger);
 
 export default function About() {
   const container = useRef<HTMLElement>(null);
-
-  useGSAP(() => {
-    const mm = gsap.matchMedia();
-
-    mm.add('(min-width: 768px)', () => {
-      // 1. Initial states for Entrance (Consistent Y-axis for all sections)
-      gsap.set('.about-label',      { autoAlpha: 0, y: 40 });
-      gsap.set('.about-heading',    { autoAlpha: 0, y: 40 });
-      gsap.set('.about-para',       { autoAlpha: 0, y: 40 });
-      gsap.set('.about-mini-card',  { autoAlpha: 0, y: 40 });
-
-      // 2. Entrance Timeline (Matches Hero snappy feel + resets on scroll up)
-      const tlIn = gsap.timeline({
-        scrollTrigger: {
-          trigger: container.current,
-          start: 'top 95%',
-          toggleActions: 'play none none reverse', // Resets cleanly when scrolling way up
-        },
-      });
-
-      tlIn.to('.about-label', { autoAlpha: 1, y: 0, duration: 1.0, ease: 'power4.out' })
-          .to('.about-heading', { autoAlpha: 1, y: 0, duration: 1.2, ease: 'power4.out' }, '-=0.8')
-          .to('.about-para', { autoAlpha: 1, y: 0, duration: 1.2, ease: 'power4.out', stagger: 0.15 }, '-=1.0')
-          .to('.about-mini-card', { autoAlpha: 1, y: 0, duration: 1.2, ease: 'power4.out', stagger: 0.15 }, '-=0.9');
-
-      // 3. Parallax Exit Timeline (Whole Container moving to prevent text clipping)
-      const tlOut = gsap.timeline({
-        scrollTrigger: {
-          trigger: container.current,
-          start: 'top 10%', 
-          end: 'bottom top',
-          scrub: 1.2, // Silky smooth parallax
-        },
-      });
-
-      tlOut.fromTo('.about-card-wrapper',
-        { y: 0, autoAlpha: 1, scale: 1, immediateRender: false },
-        { y: 100, autoAlpha: 0, scale: 0.9, ease: 'none' }, 0);
-    });
-  }, { scope: container });
 
   return (
     <section id="about" ref={container} className="px-6 md:px-12 max-w-7xl mx-auto w-full relative z-20">
