@@ -111,11 +111,11 @@
       ],
       "github": "https://github.com/Deepender25/Buddy",
       "live": "#",
-      "video": "https://www.youtube.com/embed/MzEFeIRJ0eQ",
+      "video": "https://www.youtube.com/embed/NQHF7cXHeN8",
       "icon": "Bot"
     },
     {
-      "title": "AI-Attendance",
+      "title": "Attend-Sight",
       "description": "An AI-powered attendance tracker that turns uploaded schedules into a beautiful, interactive dashboard for managing your classes.",
       "tech": [
         "React 19",
@@ -127,7 +127,7 @@
       ],
       "github": "https://github.com/Deepender25/AI-Attendance",
       "live": "https://attendsight.vercel.app/login",
-      "video": "https://www.youtube.com/embed/MzEFeIRJ0eQ",
+      "video": "https://www.youtube.com/embed/0EP20psBT4k",
       "icon": "CalendarCheck"
     },
     {
