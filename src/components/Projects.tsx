@@ -253,19 +253,32 @@ export default function Projects() {
 
                 {/* RIGHT: YouTube player — hidden on mobile */}
                 <div
-                  className="md:col-span-7 relative rounded-2xl overflow-hidden border border-white/10 bg-black hidden md:block pointer-events-none"
+                  className="md:col-span-7 relative rounded-2xl overflow-hidden border border-white/10 bg-black hidden md:block group"
                   style={{ minHeight: 0 }}
                 >
                   {project.video ? (
-                    <iframe
-                      src={`${project.video}?autoplay=1&mute=1&loop=1&playlist=${project.video.split('/').pop()}&rel=0&controls=0&modestbranding=1&vq=hd1080&hd=1`}
-                      title={`${project.title} Demo`}
-                      className="absolute inset-0 w-full h-full"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
-                      allowFullScreen
-                    />
+                    <>
+                      <iframe
+                        src={`${project.video}?autoplay=1&mute=1&loop=1&playlist=${project.video.split('/').pop()}&rel=0&controls=0&modestbranding=1&vq=hd1080&hd=1`}
+                        title={`${project.title} Demo`}
+                        className="absolute inset-0 w-full h-full pointer-events-none"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
+                        allowFullScreen
+                      />
+                      {/* Performance Shield & Interaction Layer */}
+                      <div 
+                        className="absolute inset-0 z-10 bg-black/0 group-hover:bg-black/30 transition-all duration-300 cursor-pointer"
+                        onClick={() => setMobileVideo(project.video)}
+                        aria-label="Play full video"
+                      >
+                        <div className="absolute top-6 right-6 px-4 py-2.5 rounded-full bg-black/50 backdrop-blur-xl border border-white/20 flex items-center gap-2.5 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-[-10px] group-hover:translate-y-0 shadow-xl">
+                          <MonitorPlay size={16} className="text-white" />
+                          <span className="text-white text-[11px] font-mono uppercase tracking-widest font-medium mt-[1px]">Play Full Demo</span>
+                        </div>
+                      </div>
+                    </>
                   ) : (
-                    <div className="absolute inset-0 flex items-center justify-center bg-white/5">
+                    <div className="absolute inset-0 flex items-center justify-center bg-white/5 pointer-events-none">
                       <span className="text-white/40 font-mono text-sm">No Video Available</span>
                     </div>
                   )}
@@ -308,11 +321,11 @@ export default function Projects() {
           >
             <button 
               onClick={() => setMobileVideo(null)}
-              className="self-start flex items-center gap-2 px-4 py-2 rounded-full bg-black/40 backdrop-blur-md border border-white/20 text-white active:scale-90 transition-transform shadow-lg text-sm font-medium"
+              className="self-start flex items-center gap-2 px-4 py-2 rounded-full bg-black/40 backdrop-blur-md border border-white/20 text-white hover:bg-white/10 hover:scale-105 active:scale-90 transition-all shadow-lg text-sm font-medium"
             >
               <ArrowLeft size={18} /> Back
             </button>
-            <div className="relative w-full aspect-video rounded-2xl overflow-hidden shadow-2xl border border-white/20 bg-black">
+            <div className="relative w-full max-w-5xl mx-auto aspect-video rounded-2xl overflow-hidden shadow-2xl border border-white/20 bg-black">
               <iframe
                 src={`${mobileVideo}?autoplay=1&mute=0&rel=0&controls=1&modestbranding=1&vq=hd1080&hd=1&iv_load_policy=3&fs=1`}
                 title="Mobile Demo Video"
