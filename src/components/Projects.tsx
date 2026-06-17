@@ -4,7 +4,7 @@ import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import {
-  Github, ExternalLink, ArrowLeft, ArrowRight,
+  Github, ExternalLink, ArrowLeft, ArrowRight, Mouse,
   Bot, Newspaper, FileText, MonitorPlay, CalendarCheck,
   Subtitles, Scissors, MessageSquare, MousePointer2,
 } from 'lucide-react';
@@ -32,6 +32,7 @@ function Title({ text }: { text: string }) {
 export default function Projects() {
   const container = useRef<HTMLElement>(null);
   const scrollWrapper = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [mobileVideo, setMobileVideo] = useState<string | null>(null);
 
   // Mobile detection for JSX layout updates
@@ -50,39 +51,91 @@ export default function Projects() {
     return () => mq.removeEventListener('change', handler);
   }, []);
 
+
+  /* ── Horizontal Scroll Logic for Mobile Arrows ─────────────────────── */
+  const scrollCards = (direction: 'left' | 'right') => {
+    if (scrollContainerRef.current) {
+      const scrollAmount = window.innerWidth * 0.85; // Roughly one card width
+      scrollContainerRef.current.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth'
+      });
+    }
+  };
   /* ── Horizontal Scroll Effect ─────────────────────────── */
   useGSAP(() => {
     if (!scrollWrapper.current || !container.current) return;
 
-    const tl = gsap.timeline({
-      scrollTrigger: {
-        trigger: container.current,
-        pin: true,
-        scrub: true, // Use true for 1:1 responsiveness with Lenis
-        end: () => `+=${scrollWrapper.current!.scrollWidth}`, // Scroll exactly the width of the content
-        invalidateOnRefresh: true,
-      }
+    const mm = gsap.matchMedia();
+
+    // Only apply scroll-jacking on desktop devices
+    mm.add("(min-width: 768px)", () => {
+      const getScrollAmount = () => -(scrollWrapper.current!.scrollWidth - window.innerWidth);
+
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: container.current,
+          pin: true,
+          anticipatePin: 1, // Fixes jitter when re-entering the pinned section from the bottom
+          scrub: true, // Use true for 1:1 responsiveness with Lenis (avoids double smoothing lag)
+          // Reduce the scroll distance by 50% so trackpad users don't have to swipe as much
+          end: () => `+=${scrollWrapper.current!.scrollWidth * 0.5}`, 
+          invalidateOnRefresh: true,
+        }
+      });
+
+      // 1. Initial Pause: Give the user time to read the very first project card
+      tl.to({}, { duration: 0.05 });
+
+      // 2. Horizontal Scroll: Move the wrapper to the left with GPU acceleration
+      tl.to(scrollWrapper.current, {
+        x: getScrollAmount,
+        ease: "none",
+        duration: 0.9,
+        force3D: true, // Force GPU acceleration to prevent layout thrashing and jitter
+      });
+
+      // 3. Final Pause: Give the user time to read the very last project card
+      tl.to({}, { duration: 0.05 });
     });
 
-    // 1. Initial Pause: Give the user time to read the very first project card
-    tl.to({}, { duration: 0.05 });
-
-    // 2. Horizontal Scroll: Move the wrapper to the left with GPU acceleration
-    tl.to(scrollWrapper.current, {
-      x: () => -(scrollWrapper.current!.scrollWidth - window.innerWidth),
-      ease: "none",
-      duration: 0.9,
-      force3D: true, // Force GPU acceleration to prevent layout thrashing and jitter
-    });
-
-    // 3. Final Pause: Give the user time to read the very last project card
-    tl.to({}, { duration: 0.05 });
+    return () => mm.revert();
 
   }, { scope: container });
 
+  /* ── Trackpad Horizontal Scroll Mapping ────────────────────────────── */
+  useEffect(() => {
+    const el = container.current;
+    if (!el) return;
+
+    const onWheel = (e: WheelEvent) => {
+      // Only intercept on desktop where GSAP pinning is active
+      if (window.innerWidth >= 768) {
+        // If the user is swiping horizontally (trackpad)
+        if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
+          e.preventDefault();
+          
+          // Send a fake vertical wheel event so Lenis smooth-scrolls it naturally
+          // Slightly reduced the multiplier (0.6x) to make it less sensitive as requested
+          const simulatedEvent = new WheelEvent('wheel', {
+            deltaY: e.deltaX * 0.6,
+            deltaMode: e.deltaMode,
+            bubbles: true,
+            cancelable: true,
+          });
+          
+          window.dispatchEvent(simulatedEvent);
+        }
+      }
+    };
+
+    el.addEventListener('wheel', onWheel, { passive: false });
+    return () => el.removeEventListener('wheel', onWheel);
+  }, []);
+
   /* ══════════════════════════ Render ════════════════════════════════════ */
   return (
-    <div className="w-full block mt-12 md:mt-16 mb-20">
+    <div className="w-full block">
       <style>{`
         .dynamic-pad {
           padding-left: max(1.5rem, calc(50vw - 42.5vw));
@@ -107,14 +160,14 @@ export default function Projects() {
         className="w-full relative z-50 overflow-hidden h-fit"
       >
         {/* ── Header ─────────────────────────────────────────────────────── */}
-        <div className="w-full px-6 md:px-12 max-w-7xl mx-auto flex flex-col md:flex-row md:items-end justify-between gap-3 pt-16 md:pt-24 pb-8 md:pb-12 shrink-0">
+        <div className="w-full px-6 md:px-12 max-w-7xl mx-auto flex flex-col md:flex-row md:items-end justify-between gap-6 pt-16 md:pt-24 pb-8 md:pb-12 shrink-0">
         <div>
-          <h2 className="text-sm font-mono uppercase tracking-[0.2em] text-white/40 mb-2">
+          <p className="text-sm font-mono uppercase tracking-[0.2em] text-white/40 mb-2" aria-hidden="true">
             04 // Projects
-          </h2>
-          <h3 className="text-4xl font-display font-medium tracking-tight text-gradient">
+          </p>
+          <h2 className="text-4xl font-display font-medium tracking-tight text-gradient">
             Selected Works
-          </h3>
+          </h2>
         </div>
         <a
           href="https://github.com/Deepender25"
@@ -128,28 +181,29 @@ export default function Projects() {
 
       {/* ── Project List ────────────────────────────────────────────── */}
       <div 
-        ref={scrollWrapper}
-        className="flex flex-row gap-6 md:gap-12 pb-20 w-max dynamic-pad will-change-transform"
+        ref={scrollContainerRef}
+        className="w-full overflow-x-auto md:overflow-visible hide-scrollbar snap-x snap-mandatory md:snap-none"
       >
-        {featuredProjects.map((project, idx) => {
-          const Icon = (Icons as any)[project.icon];
+        <div 
+          ref={scrollWrapper}
+          className="flex flex-row gap-6 md:gap-12 pb-20 w-max dynamic-pad will-change-transform"
+        >
+          {featuredProjects.map((project, idx) => {
+            const Icon = (Icons as any)[project.icon];
 
-          return (
-            <div
-              key={project.title}
-              className="pcard w-[85vw] md:w-[900px] lg:w-[1125px] flex-shrink-0
-                rounded-[32px] p-5 md:p-8 glass-panel flex flex-col md:h-[550px]"
-            >
+            return (
+              <div
+                key={project.title}
+                className="pcard snap-center w-[85vw] md:w-[900px] lg:w-[1125px] flex-shrink-0
+                  rounded-[32px] p-5 md:p-8 glass-panel flex flex-col md:h-[550px]"
+              >
               <div className="grid grid-cols-1 md:grid-cols-12 gap-6 h-full w-full">
 
                 {/* LEFT: details */}
                 <div className="md:col-span-5 flex flex-col justify-between h-full">
 
-                  {/* Icon + links row */}
-                  <div className="flex justify-between items-start mb-6 md:mb-0">
-                    <div className="w-[55px] h-[55px] rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center shadow-lg shrink-0">
-                      <Icon size={25} className="text-white/70" />
-                    </div>
+                  {/* Links row */}
+                  <div className="flex justify-end items-start mb-6 md:mb-0">
                     <div className="flex gap-1.5">
                       {project.github !== '#' && (
                         <a href={project.github} target="_blank" rel="noreferrer"
@@ -199,15 +253,15 @@ export default function Projects() {
 
                 {/* RIGHT: YouTube player — hidden on mobile */}
                 <div
-                  className="md:col-span-7 relative rounded-2xl overflow-hidden border border-white/10 bg-black hidden md:block"
+                  className="md:col-span-7 relative rounded-2xl overflow-hidden border border-white/10 bg-black hidden md:block pointer-events-none"
                   style={{ minHeight: 0 }}
                 >
                   {project.video ? (
                     <iframe
-                      src={`${project.video}?autoplay=0&mute=1&rel=0&controls=1&modestbranding=1&vq=hd1080&hd=1`}
+                      src={`${project.video}?autoplay=1&mute=1&loop=1&playlist=${project.video.split('/').pop()}&rel=0&controls=0&modestbranding=1&vq=hd1080&hd=1`}
                       title={`${project.title} Demo`}
                       className="absolute inset-0 w-full h-full"
-                      allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
                       allowFullScreen
                     />
                   ) : (
@@ -221,6 +275,25 @@ export default function Projects() {
             </div>
           );
         })}
+        </div>
+      </div>
+
+      {/* ── Mobile Navigation Arrows ──────────────────────────────────── */}
+      <div className="md:hidden flex justify-center items-center gap-4 mt-6">
+        <button 
+          aria-label="Scroll left"
+          onClick={() => scrollCards('left')}
+          className="p-3.5 rounded-full bg-white/5 border border-white/10 text-white/60 hover:text-white hover:bg-white/10 active:scale-95 transition-all shadow-lg backdrop-blur-md"
+        >
+          <ArrowLeft size={20} />
+        </button>
+        <button 
+          aria-label="Scroll right"
+          onClick={() => scrollCards('right')}
+          className="p-3.5 rounded-full bg-white/5 border border-white/10 text-white/60 hover:text-white hover:bg-white/10 active:scale-95 transition-all shadow-lg backdrop-blur-md"
+        >
+          <ArrowRight size={20} />
+        </button>
       </div>
 
       {/* ── Mobile Fullscreen Video Overlay ────────────────────────────── */}

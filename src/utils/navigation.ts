@@ -13,10 +13,10 @@ export const navigate = (path: string, sectionId?: string) => {
     
     if (st) {
       if (lenis) {
-        // Force Lenis to instantly jump to the mathematically exact start of the pin
-        lenis.scrollTo(st.start, { immediate: true });
+        // Force Lenis to instantly jump to the exact element
+        lenis.scrollTo(st.trigger, { immediate: true });
       } else {
-        window.scrollTo({ top: st.start, behavior: 'auto' });
+        st.trigger?.scrollIntoView({ behavior: 'auto' });
       }
     } else {
       const el = document.getElementById(sectionId);

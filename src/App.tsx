@@ -44,8 +44,8 @@ export default function App() {
     // If the user reloads the page via the browser, redirect to the home page
     const navEntries = performance.getEntriesByType('navigation') as PerformanceNavigationTiming[];
     if (navEntries.length > 0 && navEntries[0].type === 'reload') {
-      window.location.href = '/';
-      return;
+      window.history.replaceState(null, '', '/');
+      window.scrollTo(0, 0);
     }
 
     const handleLocationChange = () => {
@@ -78,7 +78,7 @@ export default function App() {
   // Initialize Lenis for smooth scrolling and sync with GSAP
   useEffect(() => {
     const lenis = new Lenis({
-      duration: 1.2,
+      duration: 0.7, // Reduced from 1.2 for snappier, less "floaty/laggy" feeling
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
     });
 
@@ -120,9 +120,9 @@ export default function App() {
 
       {/* Deep Liquid Orbs (Behind the shadow) */}
       <div className="fixed inset-0 z-[-1] overflow-hidden pointer-events-none transform-gpu">
-        <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-white/15 blur-[120px] animate-blob" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40vw] h-[40vw] rounded-full bg-slate-200/15 blur-[120px] animate-blob animation-delay-2000" />
-        <div className="absolute top-[40%] left-[30%] w-[30vw] h-[30vw] rounded-full bg-gray-300/15 blur-[100px] animate-blob animation-delay-4000" />
+        <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-white/15 blur-[60px] animate-blob" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40vw] h-[40vw] rounded-full bg-slate-200/15 blur-[60px] animate-blob animation-delay-2000" />
+        <div className="absolute top-[40%] left-[30%] w-[30vw] h-[30vw] rounded-full bg-gray-300/15 blur-[50px] animate-blob animation-delay-4000" />
       </div>
 
       {/* Dynamic Background Toggle */}
@@ -132,21 +132,17 @@ export default function App() {
         ) : (
           <EtheralShadow
             color="rgba(255, 255, 255, 0.15)"
-            animation={{ scale: 100, speed: 90 }}
+            animation={{ scale: 0, speed: 0 }}
             noise={{ opacity: 0.8, scale: 1.2 }}
             sizing="stretch"
           />
         )}
       </div>
       
-      {/* Matted Noise Texture (Keeping the subtle SVG noise for extra frosted feel) */}
-      <div 
-        className="fixed inset-0 z-0 opacity-[0.03] pointer-events-none transform-gpu"
-        style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }}
-      />
+
 
       <Navbar />
-      <main className="relative z-10 flex flex-col gap-24 pb-40">
+      <main className="relative z-10 flex flex-col gap-16 md:gap-24">
         <Hero />
         <About />
         <Skills />

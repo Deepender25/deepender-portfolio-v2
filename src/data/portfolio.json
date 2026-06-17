@@ -22,18 +22,31 @@
       "duration": "2023 – 2027"
     },
     "certifications": [
-      "Claude Code in Action",
-      "Oracle Cloud Infrastructure",
-      "AWS Solutions Architecture"
+      {
+        "name": "CS50's Introduction to Artificial Intelligence with Python",
+        "link": "https://cs50.harvard.edu/certificates/c03e7933-ea26-41c5-98d2-568cabdd08b7"
+      },
+      {
+        "name": "CS50's Introduction to Programming with Python",
+        "link": "https://cs50.harvard.edu/certificates/9de0692a-877e-4f2c-9fd6-2299b41e1159"
+      },
+      {
+        "name": "Oracle Cloud Infrastructure 2025 Certified AI Foundations Associate",
+        "link": "https://catalog-education.oracle.com/pls/certview/sharebadge?id=8F5551CD7BED32EC8EEB678B2BF5E0EFA07C889705D7E3F29117177F40C1BFB7"
+      },
+      {
+        "name": "Claude Code in Action",
+        "link": "https://verify.skilljar.com/c/h4fzh3wthaze"
+      }
     ]
   },
   "experience": [
     {
       "role": "AI/ML Intern",
       "company": "RationalGo AI",
-      "period": "Jun 2025 – Present",
+      "period": "Jun 2025 – Jul 2025 & Feb 2026 – Present",
       "description": [
-        "Shipped 3+ internal tools and product features — including workflow automation utilities and marketing efficiency tools.",
+        "Shipped 3+ internal tools and product features - including workflow automation utilities and marketing efficiency tools.",
         "Built and optimized agentic LLM pipelines using prompt engineering and LLM evaluation, improving output quality.",
         "Contributed to product testing, bug fixing, and performance optimization, collaborating on backend AI logic."
       ]

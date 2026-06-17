@@ -5,11 +5,11 @@ export default function Experience() {
   const container = useRef<HTMLElement>(null);
 
   return (
-    <section id="experience" ref={container} className="px-6 md:px-12 max-w-7xl mx-auto w-full mt-12 md:mt-16 relative z-40">
+    <section id="experience" ref={container} className="px-6 md:px-12 max-w-7xl mx-auto w-full relative z-40">
       <div className="exp-container-wrapper">
         <div className="mb-12">
-          <h2 className="exp-label text-sm font-mono uppercase tracking-[0.2em] text-white/40 mb-2">03 // Experience</h2>
-          <h3 className="exp-heading text-4xl font-display font-medium tracking-tight text-gradient">Professional Journey</h3>
+          <p className="exp-label text-sm font-mono uppercase tracking-[0.2em] text-white/40 mb-2" aria-hidden="true">03 // Experience</p>
+          <h2 className="exp-heading text-4xl font-display font-medium tracking-tight text-gradient">Professional Journey</h2>
         </div>
         
         <div className="space-y-6">

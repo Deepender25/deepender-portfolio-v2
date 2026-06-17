@@ -97,7 +97,7 @@ export default function HangingIdCard() {
           dragElastic={0.15}
           dragConstraints={{ top: -60, bottom: 220, left: -200, right: 200 }}
           whileDrag={{ cursor: 'grabbing' }}
-          className="absolute top-[100px] left-0 w-56 glass-panel rounded-2xl p-5 pointer-events-auto cursor-grab flex flex-col items-center gap-4 hover:border-white/[0.15] transition-colors duration-300 z-20"
+          className="absolute top-[100px] left-0 w-56 glass-pill rounded-2xl p-5 pointer-events-auto cursor-grab flex flex-col items-center gap-4 hover:border-white/[0.15] transition-colors duration-300 z-20"
         >
           {/* Card Hole — center of this element is the lanyard attachment point */}
           <div className="w-12 h-2 rounded-full bg-white/10 shadow-inner mb-2" />
@@ -106,7 +106,7 @@ export default function HangingIdCard() {
           <div className="w-24 h-24 rounded-full bg-gradient-to-br from-white/10 to-white/5 border border-white/20 flex items-center justify-center overflow-hidden relative shadow-[0_0_15px_rgba(255,255,255,0.1)]">
             <img
               src="/Deepender.jpg"
-              alt="Deepender"
+              alt="Deepender Yadav Profile Portrait"
               decoding="async"
               className="w-full h-full object-cover object-top rounded-full scale-[1.1] -translate-y-1.5"
             />

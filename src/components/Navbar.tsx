@@ -32,7 +32,7 @@ export default function Navbar() {
           href="/" 
           onClick={(e) => { 
             e.preventDefault(); 
-            window.location.href = '/'; 
+            navigate('/'); 
           }} 
           className="text-xl font-display font-bold tracking-tighter"
         >
@@ -77,7 +77,7 @@ export default function Navbar() {
         </div>
 
         {/* Mobile Toggle */}
-        <button className="md:hidden text-white/80" onClick={() => setIsOpen(!isOpen)}>
+        <button aria-label="Toggle mobile menu" className="md:hidden text-white/80" onClick={() => setIsOpen(!isOpen)}>
           {isOpen ? <X size={20} /> : <Menu size={20} />}
         </button>
       </div>

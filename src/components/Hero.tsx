@@ -93,35 +93,35 @@ export default function Hero() {
       // ── Layer 1 — Badge (furthest back, slowest) ──────────────────────────
       tl.fromTo('.hero-badge-wrapper',
         { y: 0, autoAlpha: 1, scale: 1, immediateRender: false },
-        { y: -45, autoAlpha: 0.15, scale: 0.92, ease: 'none' },
+        { y: -45, autoAlpha: 0.15, scale: 0.92, ease: 'none', force3D: true },
         0
       );
 
       // ── Layer 2 — Name line 1 "Deepender" (mid-ground) ───────────────────
       tl.fromTo('.hero-title-1-wrapper',
         { y: 0, xPercent: 0, immediateRender: false },
-        { y: -85, xPercent: -1.5, ease: 'none' },
+        { y: -85, xPercent: -1.5, ease: 'none', force3D: true },
         0
       );
 
       // ── Layer 3 — Name line 2 "Yadav." (slightly faster, drifts right) ───
       tl.fromTo('.hero-title-2-wrapper',
         { y: 0, xPercent: 0, immediateRender: false },
-        { y: -120, xPercent: 1.5, ease: 'none' },
+        { y: -120, xPercent: 1.5, ease: 'none', force3D: true },
         0
       );
 
       // ── Layer 4 — Buttons (mid-foreground, fades out quickly) ─────────────
       tl.fromTo('.hero-buttons-wrapper',
         { y: 0, autoAlpha: 1, immediateRender: false },
-        { y: -75, autoAlpha: 0, ease: 'none' },
+        { y: -75, autoAlpha: 0, ease: 'none', force3D: true },
         0
       );
 
       // ── Layer 5 — Glass panel (foreground, fastest + shrinks away) ────────
       tl.fromTo('.hero-panel-wrapper',
         { y: 0, autoAlpha: 1, scale: 1, immediateRender: false },
-        { y: -210, autoAlpha: 0, scale: 0.95, ease: 'none' },
+        { y: -210, autoAlpha: 0, scale: 0.95, ease: 'none', force3D: true },
         0
       );
     });
@@ -137,8 +137,8 @@ export default function Hero() {
 
           {/* Left Side */}
           <div>
-            <div className="hero-badge-wrapper">
-              <div className="hero-badge inline-flex items-center gap-3 glass-panel px-4 py-2 rounded-full mb-8">
+            <div className="hero-badge-wrapper will-change-transform">
+              <div className="hero-badge inline-flex items-center gap-3 glass-pill px-4 py-2 rounded-full mb-8 will-change-transform">
                 <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
                 <p className="font-mono text-xs text-white/80 uppercase tracking-widest">
                   {portfolioData.hero.badgeText}
@@ -147,20 +147,20 @@ export default function Hero() {
             </div>
 
             <div>
-              <div className="hero-title-1-wrapper">
-                <h1 className="hero-title-1 text-5xl md:text-7xl lg:text-[7rem] font-display font-medium tracking-tighter leading-[1.05]">
+              <div className="hero-title-1-wrapper will-change-transform">
+                <h1 className="hero-title-1 text-5xl md:text-7xl lg:text-[7rem] font-display font-medium tracking-tighter leading-[1.05] will-change-transform">
                   <ScrambleText text={portfolioData.hero.titleLine1} delay={300} className="text-gradient" />
                 </h1>
               </div>
               <div className="flex flex-col md:flex-row md:items-center gap-6 md:gap-8 mt-2">
-                <div className="hero-title-2-wrapper">
-                  <h1 className="hero-title-2 text-5xl md:text-7xl lg:text-[7rem] font-display font-medium tracking-tighter leading-[1.05] italic font-light text-white/60">
+                <div className="hero-title-2-wrapper will-change-transform">
+                  <span className="block hero-title-2 text-5xl md:text-7xl lg:text-[7rem] font-display font-medium tracking-tighter leading-[1.05] italic font-light text-white/60 will-change-transform">
                     <ScrambleText text={portfolioData.hero.titleLine2} delay={1500} />
-                  </h1>
+                  </span>
                 </div>
 
-                <div className="hero-buttons-wrapper">
-                  <div className="hero-buttons flex flex-wrap items-center gap-4 mt-4 md:mt-0">
+                <div className="hero-buttons-wrapper will-change-transform">
+                  <div className="hero-buttons flex flex-wrap items-center gap-4 mt-4 md:mt-0 will-change-transform">
                     <a
                       href="#projects"
                       className="group flex items-center gap-3 bg-white text-black px-6 py-3 md:px-8 md:py-4 rounded-full text-sm md:text-base font-medium hover:bg-white/90 transition-all hover:scale-105 active:scale-95 tracking-normal font-sans"
@@ -179,7 +179,7 @@ export default function Hero() {
                           href={social.href}
                           target="_blank"
                           rel="noreferrer"
-                          className="glass-panel p-3 md:p-4 rounded-full text-white/60 hover:text-white hover:scale-110 transition-all"
+                          className="glass-pill p-3 md:p-4 rounded-full text-white/60 hover:text-white hover:scale-110 transition-all"
                         >
                           <social.icon size={20} />
                         </a>
@@ -193,8 +193,8 @@ export default function Hero() {
         </div>
 
         {/* Bottom Section: Wide Text Panel */}
-        <div className="hero-panel-wrapper w-full">
-          <div className="hero-panel w-full glass-panel p-8 md:p-12 rounded-[2rem] relative overflow-hidden">
+        <div className="hero-panel-wrapper w-full will-change-transform">
+          <div className="hero-panel w-full glass-panel p-8 md:p-12 rounded-[2rem] relative overflow-hidden will-change-transform">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16">
               <p className="text-xl md:text-2xl text-white/80 font-light leading-relaxed">
                 {portfolioData.hero.description1}

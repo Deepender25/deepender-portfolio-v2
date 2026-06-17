@@ -70,8 +70,9 @@ export default function ResumeModal({ isOpen, onClose }: ResumeModalProps) {
                   <span className="hidden sm:inline">Download</span>
                 </a>
                 <button
+                  aria-label="Close resume"
                   onClick={onClose}
-                  className="p-2 text-white/60 hover:text-white hover:bg-white/10 rounded-full transition-colors"
+                  className="p-2 rounded-full bg-white/10 text-white/70 hover:text-white hover:bg-white/20 transition-all border border-white/20"
                 >
                   <X size={20} />
                 </button>

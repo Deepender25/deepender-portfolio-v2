@@ -49,36 +49,36 @@ export default function Contact() {
   };
 
   return (
-    <section id="contact" ref={container} className="px-6 md:px-12 max-w-7xl mx-auto w-full mt-12 md:mt-16 pb-20 relative z-[60]">
+    <section id="contact" ref={container} className="px-6 md:px-12 max-w-7xl mx-auto w-full relative z-[60]">
       <div className="contact-container-wrapper">
         <div className="contact-card glass-panel-strong rounded-[2rem] p-8 md:p-16 relative overflow-hidden">
           <div className="absolute bottom-0 left-0 w-64 h-64 bg-white/5 rounded-full blur-[80px] translate-y-1/2 -translate-x-1/2" />
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 relative z-10">
             <div>
-              <h2 className="contact-label text-sm font-mono uppercase tracking-[0.2em] text-white/40 mb-4">05 // Contact</h2>
-              <h3 className="contact-heading text-4xl md:text-6xl font-display font-medium tracking-tight mb-6 text-gradient">
+              <p className="contact-label text-sm font-mono uppercase tracking-[0.2em] text-white/40 mb-4" aria-hidden="true">05 // Contact</p>
+              <h2 className="contact-heading text-4xl md:text-6xl font-display font-medium tracking-tight mb-6 text-gradient">
                 Let's build<br/>together.
-              </h3>
+              </h2>
               <p className="contact-subtext text-white/60 font-light text-lg mb-12 max-w-md">
                 {portfolioData.contact.text}
               </p>
 
               <div className="flex flex-col gap-6">
                 <a href={`mailto:${portfolioData.contact.email}`} className="contact-link flex items-center gap-3 md:gap-4 text-white/80 hover:text-white transition-colors group w-full md:w-fit">
-                  <div className="shrink-0 w-10 h-10 md:w-12 md:h-12 rounded-full glass-panel flex items-center justify-center group-hover:bg-white group-hover:text-black transition-all">
+                  <div className="shrink-0 w-10 h-10 md:w-12 md:h-12 rounded-full glass-pill flex items-center justify-center group-hover:bg-white group-hover:text-black transition-all">
                     <Mail size={18} />
                   </div>
                   <span className="font-light text-sm md:text-lg break-all md:break-normal">{portfolioData.contact.email}</span>
                 </a>
                 <a href={`tel:${portfolioData.contact.phone.replace(/\s+/g, '')}`} className="contact-link flex items-center gap-3 md:gap-4 text-white/80 hover:text-white transition-colors group w-full md:w-fit">
-                  <div className="shrink-0 w-10 h-10 md:w-12 md:h-12 rounded-full glass-panel flex items-center justify-center group-hover:bg-white group-hover:text-black transition-all">
+                  <div className="shrink-0 w-10 h-10 md:w-12 md:h-12 rounded-full glass-pill flex items-center justify-center group-hover:bg-white group-hover:text-black transition-all">
                     <Phone size={18} />
                   </div>
                   <span className="font-light text-sm md:text-lg break-all md:break-normal">{portfolioData.contact.phone}</span>
                 </a>
                 <a href={portfolioData.contact.linkedinUrl} target="_blank" rel="noreferrer" className="contact-link flex items-center gap-3 md:gap-4 text-white/80 hover:text-white transition-colors group w-full md:w-fit">
-                  <div className="shrink-0 w-10 h-10 md:w-12 md:h-12 rounded-full glass-panel flex items-center justify-center group-hover:bg-white group-hover:text-black transition-all">
+                  <div className="shrink-0 w-10 h-10 md:w-12 md:h-12 rounded-full glass-pill flex items-center justify-center group-hover:bg-white group-hover:text-black transition-all">
                     <Linkedin size={18} />
                   </div>
                   <span className="font-light text-sm md:text-lg break-all md:break-normal">{portfolioData.contact.linkedin}</span>
