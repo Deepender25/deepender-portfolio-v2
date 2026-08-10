@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 
 interface ScrambleTextProps {
   text: string;
@@ -10,16 +10,21 @@ interface ScrambleTextProps {
 const CHARS = 'abcdefghijklmnopqrstuvwxyz+-_~|/\\';
 
 export function ScrambleText({ text, delay = 0, className = "" }: ScrambleTextProps) {
-  // Start with a blank string of the same length
-  const [displayText, setDisplayText] = useState(text.replace(/./g, ' '));
-  const textRef = useRef<HTMLSpanElement>(null);
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+
+  // On mobile, display full text immediately without blank initial state
+  const [displayText, setDisplayText] = useState(isMobile ? text : text.replace(/./g, ' '));
 
   useEffect(() => {
+    // Mobile view: no scramble animation at all
+    if (isMobile) {
+      setDisplayText(text);
+      return;
+    }
+
     let rafId: number;
     let startTimestamp: number | null = null;
     let delayDone = false;
-    let lastMobileUpdate = 0;
-    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
 
     // How long (ms) the full scramble takes after delay
     const animate = (timestamp: number) => {
@@ -36,33 +41,18 @@ export function ScrambleText({ text, delay = 0, className = "" }: ScrambleTextPr
       const animElapsed = elapsed - delay;
       const iteration = Math.min((animElapsed / 45) * (1 / 3), text.length);
 
-      const nextText = text.split('').map((char, index) => {
-        if (char === ' ') return ' ';
-        if (index < iteration) return text[index];
-        return CHARS[Math.floor(Math.random() * CHARS.length)];
-      }).join('');
-
-      if (isMobile) {
-        // Mobile-optimized path: bypass high-frequency React state re-renders by mutating DOM directly,
-        // and throttle DOM writes to ~30fps (~33ms) to eliminate mobile main-thread jank & lag.
-        if (animElapsed - lastMobileUpdate >= 30 || iteration >= text.length) {
-          lastMobileUpdate = animElapsed;
-          if (textRef.current) {
-            textRef.current.textContent = iteration >= text.length ? text : nextText;
-          }
-        }
-      } else {
-        // Exact PC path (untouched high-frequency state updates)
-        setDisplayText(nextText);
-      }
+      setDisplayText(
+        text.split('').map((char, index) => {
+          if (char === ' ') return ' ';
+          if (index < iteration) return text[index];
+          return CHARS[Math.floor(Math.random() * CHARS.length)];
+        }).join('')
+      );
 
       if (iteration < text.length) {
         rafId = requestAnimationFrame(animate);
       } else {
-        setDisplayText(text); // ensure exact final state
-        if (textRef.current) {
-          textRef.current.textContent = text;
-        }
+        setDisplayText(text); // ensure exact final text
       }
     };
 
@@ -72,17 +62,16 @@ export function ScrambleText({ text, delay = 0, className = "" }: ScrambleTextPr
     return () => {
       cancelAnimationFrame(rafId);
     };
-  }, [text, delay]);
+  }, [text, delay, isMobile]);
 
   return (
     <span className="relative inline-block">
       {/* Invisible text to maintain exact final width and prevent layout shifts */}
       <span className={`invisible ${className}`}>{text}</span>
-      {/* Absolutely positioned scrambling text */}
-      <span ref={textRef} className={`absolute top-0 left-0 whitespace-pre ${className}`}>
-        {displayText}
-      </span>
+      {/* Absolutely positioned text */}
+      <span className={`absolute top-0 left-0 whitespace-pre ${className}`}>{displayText}</span>
     </span>
   );
 }
+
 
