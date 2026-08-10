@@ -1,0 +1,10 @@
+# Treat binary files as binary to prevent Git CRLF line ending corruption on Windows
+*.pdf binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
