@@ -5,6 +5,7 @@ import { useGSAP } from '@gsap/react';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { ArrowRight, Github, Linkedin, Mail } from 'lucide-react';
 import { ScrambleText } from './ui/ScrambleText';
+import { Magnetic } from './ui/Magnetic';
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 
@@ -161,22 +162,26 @@ export default function Hero() {
 
                 <div className="hero-buttons-wrapper will-change-transform">
                   <div className="hero-buttons flex flex-wrap items-center gap-4 mt-4 md:mt-0 will-change-transform">
-                    <a
-                      href="#projects"
-                      className="group flex items-center gap-3 bg-white text-black px-6 py-3 md:px-8 md:py-4 rounded-full text-sm md:text-base font-medium hover:bg-white/90 transition-all hover:scale-105 active:scale-95 tracking-normal font-sans"
-                    >
-                      View Projects
-                      <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
-                    </a>
+                    <Magnetic>
+                      <a
+                        href="#projects"
+                        data-cursor="Explore"
+                        className="group flex items-center gap-3 bg-white text-black px-6 py-3 md:px-8 md:py-4 rounded-full text-sm md:text-base font-medium hover:bg-white/90 transition-all hover:scale-105 active:scale-95 tracking-normal font-sans"
+                      >
+                        View Projects
+                        <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                      </a>
+                    </Magnetic>
                     <div className="flex items-center gap-3 md:gap-4">
                       {[
-                        { icon: Github, href: portfolioData.hero.social.github },
-                        { icon: Linkedin, href: portfolioData.hero.social.linkedin },
-                        { icon: Mail, href: portfolioData.hero.social.email }
+                        { icon: Github, href: portfolioData.hero.social.github, label: 'GitHub' },
+                        { icon: Linkedin, href: portfolioData.hero.social.linkedin, label: 'LinkedIn' },
+                        { icon: Mail, href: portfolioData.hero.social.email, label: 'Email' }
                       ].map((social, i) => (
                         <a
                           key={i}
                           href={social.href}
+                          data-cursor={social.label}
                           target="_blank"
                           rel="noreferrer"
                           className="glass-pill p-3 md:p-4 rounded-full text-white/60 hover:text-white hover:scale-110 transition-all"

@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Download, Loader2, ExternalLink } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useFocusTrap } from '../lib/focus-trap';
 
 interface ResumeModalProps {
   isOpen: boolean;
@@ -9,6 +10,7 @@ interface ResumeModalProps {
 
 export default function ResumeModal({ isOpen, onClose }: ResumeModalProps) {
   const [iframeLoaded, setIframeLoaded] = useState(false);
+  const trapRef = useFocusTrap<HTMLDivElement>(isOpen);
 
   // Prevent scrolling when modal is open
   useEffect(() => {
@@ -42,6 +44,7 @@ export default function ResumeModal({ isOpen, onClose }: ResumeModalProps) {
 
           {/* Modal Panel */}
           <motion.div
+            ref={trapRef}
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -56,6 +59,7 @@ export default function ResumeModal({ isOpen, onClose }: ResumeModalProps) {
                   href={pdfUrl}
                   target="_blank"
                   rel="noreferrer"
+                  data-cursor="New Tab"
                   className="flex items-center gap-2 px-3 py-2 bg-white/10 hover:bg-white/20 text-white rounded-full text-sm font-medium transition-colors"
                 >
                   <ExternalLink size={15} />
@@ -64,6 +68,7 @@ export default function ResumeModal({ isOpen, onClose }: ResumeModalProps) {
                 <a
                   href={pdfUrl}
                   download="Deepender_Yadav_Resume.pdf"
+                  data-cursor="Save PDF"
                   className="flex items-center gap-2 px-3 py-2 bg-white/10 hover:bg-white/20 text-white rounded-full text-sm font-medium transition-colors"
                 >
                   <Download size={15} />
@@ -71,6 +76,7 @@ export default function ResumeModal({ isOpen, onClose }: ResumeModalProps) {
                 </a>
                 <button
                   aria-label="Close resume"
+                  data-cursor="Close"
                   onClick={onClose}
                   className="p-2 rounded-full bg-white/10 text-white/70 hover:text-white hover:bg-white/20 transition-all border border-white/20"
                 >

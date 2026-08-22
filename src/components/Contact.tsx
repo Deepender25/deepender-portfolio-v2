@@ -1,6 +1,6 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import portfolioData from '../data/portfolio.json';
-import { ArrowRight, CheckCircle2, Github, Linkedin, Mail, Phone, XCircle } from 'lucide-react';
+import { ArrowRight, Check, CheckCircle2, Copy, Github, Linkedin, Mail, Phone, XCircle } from 'lucide-react';
 
 interface FormState {
   name: string;
@@ -15,6 +15,35 @@ export default function Contact() {
   const [form, setForm] = useState<FormState>({ name: '', email: '', message: '' });
   const [status, setStatus] = useState<Status>('idle');
   const [errorMsg, setErrorMsg] = useState('');
+  const [emailCopied, setEmailCopied] = useState(false);
+  const [flashEmail, setFlashEmail] = useState(false);
+
+  /* Easter egg: typing "hiredev" anywhere summons this section */
+  useEffect(() => {
+    let buffer = '';
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key.length !== 1) return;
+      buffer = (buffer + event.key.toLowerCase()).slice(-7);
+      if (buffer === 'hiredev') {
+        buffer = '';
+        document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' });
+        setFlashEmail(true);
+        window.setTimeout(() => setFlashEmail(false), 2600);
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
+
+  const copyEmail = async () => {
+    try {
+      await navigator.clipboard.writeText(portfolioData.contact.email);
+      setEmailCopied(true);
+      setTimeout(() => setEmailCopied(false), 2000);
+    } catch {
+      /* clipboard unavailable — mailto link still works */
+    }
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setForm(prev => ({ ...prev, [e.target.id]: e.target.value }));
@@ -65,19 +94,38 @@ export default function Contact() {
               </p>
 
               <div className="flex flex-col gap-6">
-                <a href={`mailto:${portfolioData.contact.email}`} className="contact-link flex items-center gap-3 md:gap-4 text-white/80 hover:text-white transition-colors group w-full md:w-fit">
-                  <div className="shrink-0 w-10 h-10 md:w-12 md:h-12 rounded-full glass-pill flex items-center justify-center group-hover:bg-white group-hover:text-black transition-all">
-                    <Mail size={18} />
-                  </div>
-                  <span className="font-light text-sm md:text-lg break-all md:break-normal">{portfolioData.contact.email}</span>
-                </a>
-                <a href={`tel:${portfolioData.contact.phone.replace(/\s+/g, '')}`} className="contact-link flex items-center gap-3 md:gap-4 text-white/80 hover:text-white transition-colors group w-full md:w-fit">
+                <div
+                  className={`contact-link flex items-center gap-3 md:gap-4 text-white/80 hover:text-white transition-colors group w-full md:w-fit rounded-2xl px-3 py-2 -mx-3 transition-all duration-500 ${
+                    flashEmail ? 'bg-white/[0.07] ring-1 ring-white/25' : ''
+                  }`}
+                >
+                  <a
+                    href={`mailto:${portfolioData.contact.email}`}
+                    className="flex items-center gap-3 md:gap-4"
+                  >
+                    <span className="shrink-0 w-10 h-10 md:w-12 md:h-12 rounded-full glass-pill flex items-center justify-center group-hover:bg-white group-hover:text-black transition-all">
+                      <Mail size={18} />
+                    </span>
+                    <span className="font-light text-sm md:text-lg break-all md:break-normal">{portfolioData.contact.email}</span>
+                  </a>
+                  <button
+                    type="button"
+                    onClick={copyEmail}
+                    data-cursor="Copy Email"
+                    aria-label={emailCopied ? 'Email copied' : 'Copy email address'}
+                    title="Copy email address"
+                    className="rounded-full border border-white/15 bg-white/5 p-2 text-white/60 transition-all duration-300 hover:bg-white/15 hover:text-white active:scale-90"
+                  >
+                    {emailCopied ? <Check size={13} className="text-green-400" /> : <Copy size={13} />}
+                  </button>
+                </div>
+                <a href={`tel:${portfolioData.contact.phone.replace(/\s+/g, '')}`} data-cursor="Call Me" className="contact-link flex items-center gap-3 md:gap-4 text-white/80 hover:text-white transition-colors group w-full md:w-fit">
                   <div className="shrink-0 w-10 h-10 md:w-12 md:h-12 rounded-full glass-pill flex items-center justify-center group-hover:bg-white group-hover:text-black transition-all">
                     <Phone size={18} />
                   </div>
                   <span className="font-light text-sm md:text-lg break-all md:break-normal">{portfolioData.contact.phone}</span>
                 </a>
-                <a href={portfolioData.contact.linkedinUrl} target="_blank" rel="noreferrer" className="contact-link flex items-center gap-3 md:gap-4 text-white/80 hover:text-white transition-colors group w-full md:w-fit">
+                <a href={portfolioData.contact.linkedinUrl} target="_blank" rel="noreferrer" data-cursor="LinkedIn" className="contact-link flex items-center gap-3 md:gap-4 text-white/80 hover:text-white transition-colors group w-full md:w-fit">
                   <div className="shrink-0 w-10 h-10 md:w-12 md:h-12 rounded-full glass-pill flex items-center justify-center group-hover:bg-white group-hover:text-black transition-all">
                     <Linkedin size={18} />
                   </div>
@@ -154,6 +202,7 @@ export default function Contact() {
                 <button
                   type="submit"
                   disabled={status === 'submitting'}
+                  data-cursor={status === 'submitting' ? 'Sending' : 'Send It'}
                   className="w-full flex justify-center items-center gap-2 bg-white text-black px-8 py-4 rounded-xl text-sm font-medium hover:bg-white/90 transition-all disabled:opacity-50 hover:scale-[1.02] active:scale-[0.98]"
                 >
                   {status === 'idle' && <><span>Send Message</span><ArrowRight size={16} /></>}

@@ -1,5 +1,6 @@
 import { motion, useMotionValue, useTransform, useSpring } from 'motion/react';
-import { useRef } from 'react';
+import { Star } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 
 // Layout constants — must match the card's CSS exactly
 const CARD_TOP = 100;          // absolute top of card within the wrapper (px)
@@ -9,6 +10,26 @@ const HOLE_FROM_CARD_TOP = 21; // distance from card's top edge to the center of
 
 export default function HangingIdCard() {
   const cardRef = useRef<HTMLDivElement>(null);
+  const [flipped, setFlipped] = useState(false);
+
+  /* Konami code flips the badge to its secret face */
+  useEffect(() => {
+    const sequence = [
+      'arrowup', 'arrowup', 'arrowdown', 'arrowdown',
+      'arrowleft', 'arrowright', 'arrowleft', 'arrowright', 'b', 'a',
+    ];
+    let buffer: string[] = [];
+    const onKeyDown = (event: KeyboardEvent) => {
+      buffer.push(event.key.toLowerCase());
+      buffer = buffer.slice(-sequence.length);
+      if (buffer.join('|') === sequence.join('|')) {
+        setFlipped((prev) => !prev);
+        buffer = [];
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
 
   // Raw drag motion values — framer sets these to 0 when dragSnapToOrigin fires
   const dragX = useMotionValue(0);
@@ -97,10 +118,22 @@ export default function HangingIdCard() {
           dragElastic={0.15}
           dragConstraints={{ top: -60, bottom: 220, left: -200, right: 200 }}
           whileDrag={{ cursor: 'grabbing' }}
-          className="absolute top-[100px] left-0 w-56 glass-pill rounded-2xl p-5 pointer-events-auto cursor-grab flex flex-col items-center gap-4 hover:border-white/[0.15] transition-colors duration-300 z-20"
+          data-cursor="Drag Me"
+          className="absolute top-[100px] left-0 w-56 glass-pill rounded-2xl p-5 pointer-events-auto cursor-grab flex flex-col items-center gap-4 hover:border-white/[0.15] transition-colors duration-300 z-20 [perspective:900px]"
         >
-          {/* Card Hole — center of this element is the lanyard attachment point */}
-          <div className="w-12 h-2 rounded-full bg-white/10 shadow-inner mb-2" />
+          {/* Flip wrapper — Konami code reveals the secret face */}
+          <div
+            className="relative w-full"
+            style={{
+              transformStyle: 'preserve-3d',
+              transform: `rotateY(${flipped ? 180 : 0}deg)`,
+              transition: 'transform 0.9s cubic-bezier(0.22, 1, 0.36, 1)',
+            }}
+          >
+            {/* Front face */}
+            <div style={{ backfaceVisibility: 'hidden' }} className="flex w-full flex-col items-center gap-4">
+              {/* Card Hole — center of this element is the lanyard attachment point */}
+              <div className="w-12 h-2 rounded-full bg-white/10 shadow-inner mb-2" />
 
           {/* Profile Image */}
           <div className="w-24 h-24 rounded-full bg-gradient-to-br from-white/10 to-white/5 border border-white/20 flex items-center justify-center overflow-hidden relative shadow-[0_0_15px_rgba(255,255,255,0.1)]">
@@ -134,6 +167,26 @@ export default function HangingIdCard() {
             <p className="text-[10px] font-mono text-white/30 tracking-widest">
               ID: DY-2026
             </p>
+          </div>
+            </div>
+
+            {/* Back face — the secret */}
+            <div
+              aria-hidden={!flipped}
+              style={{
+                backfaceVisibility: 'hidden',
+                transform: 'rotateY(180deg)',
+              }}
+              className="absolute inset-0 flex flex-col items-center justify-center gap-3 rounded-2xl border border-white/15 bg-[#0b0b0c]/95 p-5"
+            >
+              <Star size={18} className="fill-current text-white" />
+              <p className="font-display text-2xl font-semibold tracking-tight text-gradient">
+                HIRE ME
+              </p>
+              <p className="font-mono text-[9px] uppercase tracking-[0.25em] text-white/40">
+                {'// you found it · dy-2026'}
+              </p>
+            </div>
           </div>
         </motion.div>
       </motion.div>

@@ -63,7 +63,27 @@
   ],
   "projects": [
     {
+      "title": "Edge Drop",
+      "category": "DESKTOP APP",
+      "description": "A dynamic-island style clipboard shelf that lives on your screen edge — hover to spring it open, then drag text, images, links, and files straight into any app.",
+      "tech": [
+        "Electron",
+        "React 19",
+        "TypeScript",
+        "Zustand",
+        "Framer Motion"
+      ],
+      "github": "https://github.com/Deepender25/Edge-Drop",
+      "live": "https://www.edgedrop.app/",
+      "msStore": "https://apps.microsoft.com/detail/9P3JMHN9M4NR",
+      "showStars": true,
+      "clip": "/videos/edge-drop.webm",
+      "poster": "/videos/edge-drop.jpg",
+      "icon": "AppWindow"
+    },
+    {
       "title": "Readme Architect AI",
+      "category": "SAAS",
       "description": "SaaS app generating professional GitHub READMEs with Google Gemini AI. Shipped GitHub OAuth, private repo support, JWT auth, dynamic sitemap, and Google Analytics.",
       "tech": [
         "Next.js",
@@ -74,11 +94,13 @@
       ],
       "github": "https://github.com/Deepender25/Readme-Architect-AI",
       "live": "https://readmearchitect.vercel.app",
-      "video": "https://www.youtube.com/embed/7Xc5ZwdG3RM",
+      "clip": "/videos/readme-architect-ai.webm",
+      "poster": "/videos/readme-architect-ai.jpg",
       "icon": "FileText"
     },
     {
       "title": "Campus Chatbot",
+      "category": "AI AGENT",
       "description": "AI-powered multilingual chatbot for campus information. Features Gemini LLM, dynamic knowledge base, Telegram/web interfaces, and a secure admin dashboard.",
       "tech": [
         "Next.js",
@@ -92,11 +114,13 @@
       ],
       "github": "https://github.com/Deepender25/Campus_Chatbot",
       "live": "#",
-      "video": "https://www.youtube.com/embed/yPvnK4IIrF4",
+      "clip": "/videos/campus-chatbot.webm",
+      "poster": "/videos/campus-chatbot.jpg",
       "icon": "MessageSquare"
     },
     {
       "title": "CursorViaCam",
+      "category": "HCI",
       "description": "AI-powered head tracking mouse control system for hands-free computer interaction — designed to assist users with motor impairments.",
       "tech": [
         "Python",
@@ -109,11 +133,13 @@
       ],
       "github": "https://github.com/Deepender25/CursorViaCam",
       "live": "#",
-      "video": "https://www.youtube.com/embed/je72obuqVI8",
+      "clip": "/videos/cursorviacam.webm",
+      "poster": "/videos/cursorviacam.jpg",
       "icon": "MousePointer2"
     },
     {
       "title": "Buddy",
+      "category": "MOBILE",
       "description": "AI text assistant for Android — type /fix, /formal, /reply or any custom trigger at the end of text in any app, and Buddy rewrites it instantly using Gemini.",
       "tech": [
         "Kotlin",
@@ -124,11 +150,13 @@
       ],
       "github": "https://github.com/Deepender25/Buddy",
       "live": "#",
-      "video": "https://www.youtube.com/embed/NQHF7cXHeN8",
+      "clip": "/videos/buddy.webm",
+      "poster": "/videos/buddy.jpg",
       "icon": "Bot"
     },
     {
       "title": "Attend-Sight",
+      "category": "WEB APP",
       "description": "An AI-powered attendance tracker that turns uploaded schedules into a beautiful, interactive dashboard for managing your classes.",
       "tech": [
         "React 19",
@@ -140,11 +168,13 @@
       ],
       "github": "https://github.com/Deepender25/AI-Attendance",
       "live": "https://attendsight.vercel.app/login",
-      "video": "https://www.youtube.com/embed/0EP20psBT4k",
+      "clip": "/videos/attend-sight.webm",
+      "poster": "/videos/attend-sight.jpg",
       "icon": "CalendarCheck"
     },
     {
       "title": "Presenta",
+      "category": "CREATIVE TOOL",
       "description": "Create stunning video mockups and screenshots with professional device frames and smooth scrolling animations directly in your browser.",
       "tech": [
         "Python",
@@ -155,11 +185,13 @@
       ],
       "github": "https://github.com/Deepender25/Presenta",
       "live": "https://presenta-studio.vercel.app",
-      "video": "https://www.youtube.com/embed/MzEFeIRJ0eQ",
+      "clip": "/videos/presenta.webm",
+      "poster": "/videos/presenta.jpg",
       "icon": "MonitorPlay"
     },
     {
       "title": "AI-news-Automation",
+      "category": "AUTOMATION",
       "description": "Automated AI news aggregator that fetches, summarizes, and emails daily tech briefings using Google Gemini AI and Vercel serverless functions.",
       "tech": [
         "Python",
@@ -170,11 +202,11 @@
       ],
       "github": "https://github.com/Deepender25/AI-news-Automation",
       "live": "#",
-      "video": "https://www.youtube.com/embed/MzEFeIRJ0eQ",
       "icon": "Newspaper"
     },
     {
       "title": "Video-to-Shorts",
+      "category": "AI VIDEO",
       "description": "Converts long-form videos into short-form content with AI-generated subtitles. Powered by Gemini API for intelligent content analysis and subtitle generation.",
       "tech": [
         "React",
@@ -187,11 +219,11 @@
       ],
       "github": "https://github.com/Deepender25/Video-to-Shorts",
       "live": "#",
-      "video": "https://www.youtube.com/embed/MzEFeIRJ0eQ",
       "icon": "Scissors"
     },
     {
       "title": "Sub-Gen",
+      "category": "SUBTITLES",
       "description": "AI-powered video subtitle generation tool that automatically transcribes and generates subtitles using speech-to-text. Supports Hindi and Hinglish.",
       "tech": [
         "React",
@@ -204,7 +236,6 @@
       ],
       "github": "https://github.com/Deepender25/Sub-Gen",
       "live": "#",
-      "video": "https://www.youtube.com/embed/MzEFeIRJ0eQ",
       "icon": "Subtitles"
     }
   ],
@@ -277,5 +308,6 @@
     "phone": "+91 7015878120",
     "linkedin": "linkedin.com/in/deepender25",
     "linkedinUrl": "https://www.linkedin.com/in/deepender25/"
-  }
+  },
+  "testimonials": []
 }

@@ -1,343 +1,447 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
 import portfolioData from '../data/portfolio.json';
+import { ArrowUpRight, ExternalLink, Github, Play, Star, Store, X } from 'lucide-react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import {
-  Github, ExternalLink, ArrowLeft, ArrowRight, Mouse,
-  Bot, Newspaper, FileText, MonitorPlay, CalendarCheck,
-  Subtitles, Scissors, MessageSquare, MousePointer2,
-} from 'lucide-react';
-import * as Icons from 'lucide-react';
+import { navigate } from '../utils/navigation';
+import { useFocusTrap } from '../lib/focus-trap';
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 
-/* ─────────────────────────── Data ─────────────────────────────────────── */
-const featuredProjects = portfolioData.projects;
+const pad = (value: number) => String(value).padStart(2, '0');
 
-/* ─────────── Word-split title renderer ───────────────────────────────── */
-function Title({ text }: { text: string }) {
+interface ProjectRow {
+  title: string;
+  category?: string;
+  description: string;
+  tech: string[];
+  github: string;
+  live: string;
+  clip?: string;
+  poster?: string;
+  msStore?: string;
+  showStars?: boolean;
+}
+
+const ghostPill =
+  'flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-4 py-2 font-mono text-[11px] uppercase tracking-wider text-white transition-all duration-300 hover:bg-white hover:text-black active:scale-95';
+
+/* Live GitHub star count — fetched at view-time, refreshed every 10 min */
+function GithubStars({ repo, href }: { repo: string; href: string }) {
+  const [stars, setStars] = useState<number | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    const load = () => {
+      fetch(`https://api.github.com/repos/${repo}`, {
+        headers: { Accept: 'application/vnd.github+json' },
+      })
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (!cancelled && data && typeof data.stargazers_count === 'number') {
+            setStars(data.stargazers_count);
+          }
+        })
+        .catch(() => {});
+    };
+    load();
+    const id = window.setInterval(load, 600_000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(id);
+    };
+  }, [repo]);
+
   return (
-    <>
-      {text.split(' ').map((word, i) => (
-        <span key={i} className="inline-block max-md:overflow-visible overflow-hidden mr-[0.35em] last:mr-0 align-bottom">
-          <span className="word-inner inline-block">{word}</span>
-        </span>
-      ))}
-    </>
+    <a href={href} target="_blank" rel="noreferrer" aria-label="GitHub stars" className={ghostPill}>
+      <Star size={13} className="fill-current opacity-80" />
+      <span>{stars === null ? '···' : `${stars.toLocaleString('en-US')} Stars`}</span>
+    </a>
   );
 }
 
-/* ═══════════════════════════ Component ══════════════════════════════════ */
+interface LightboxTarget {
+  src: string;
+  title: string;
+}
+
+/* Cover image with graceful source-by-source fallback */
+function Cover({ sources, alt }: { sources: string[]; alt: string }) {
+  const [step, setStep] = useState(0);
+  if (!sources.length) {
+    return (
+      <div className="absolute inset-0 flex items-center justify-center bg-white/[0.03]">
+        <span className="font-mono text-[10px] uppercase tracking-widest text-white/30">
+          Demo Coming Soon
+        </span>
+      </div>
+    );
+  }
+  return (
+    <img
+      src={sources[Math.min(step, sources.length - 1)]}
+      alt={alt}
+      loading="lazy"
+      decoding="async"
+      draggable={false}
+      onError={() => setStep((prev) => (prev < sources.length - 1 ? prev + 1 : prev))}
+      className={`absolute inset-0 h-full w-full object-cover ${step === sources.length - 1 && step > 0 ? 'scale-[1.6]' : ''}`}
+    />
+  );
+}
+
 export default function Projects() {
   const container = useRef<HTMLElement>(null);
-  const scrollWrapper = useRef<HTMLDivElement>(null);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const [mobileVideo, setMobileVideo] = useState<string | null>(null);
+  const projects: ProjectRow[] = portfolioData.projects;
+  const [streaming, setStreaming] = useState<ReadonlySet<number>>(new Set());
+  const [portrait, setPortrait] = useState<ReadonlySet<number>>(new Set());
+  const [lightbox, setLightbox] = useState<LightboxTarget | null>(null);
+  const lightboxTrapRef = useFocusTrap<HTMLDivElement>(Boolean(lightbox));
 
-  // Mobile detection for JSX layout updates
-  const [isMobileLayout, setIsMobileLayout] = useState(
-    typeof window !== 'undefined' && window.innerWidth < 768
+  const markPortrait = (index: number) => {
+    setPortrait((prev) => {
+      if (prev.has(index)) return prev;
+      const next = new Set(prev);
+      next.add(index);
+      return next;
+    });
+  };
+
+  /* ── Lazy stream: mount each inline player once its row nears viewport ── */
+  useEffect(() => {
+    const stage = container.current;
+    if (!stage) return;
+    const targets = stage.querySelectorAll<HTMLElement>('[data-media-index]');
+    if (!targets.length) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        setStreaming((prev) => {
+          let changed = false;
+          const next = new Set(prev);
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              const idx = Number((entry.target as HTMLElement).dataset.mediaIndex);
+              if (!next.has(idx)) {
+                next.add(idx);
+                changed = true;
+              }
+            }
+          });
+          return changed ? next : prev;
+        });
+      },
+      { rootMargin: '700px 0px' },
+    );
+
+    targets.forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
+  }, []);
+
+  /* ── Lightbox: escape to close + body scroll lock ─────────────────────── */
+  useEffect(() => {
+    if (!lightbox) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setLightbox(null);
+    };
+    window.addEventListener('keydown', onKeyDown);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      window.removeEventListener('keydown', onKeyDown);
+      document.body.style.overflow = '';
+    };
+  }, [lightbox]);
+
+  /* ── Scroll choreography — quiet editorial reveals ────────────────────── */
+  useGSAP(
+    () => {
+      const mm = gsap.matchMedia();
+
+      mm.add('(prefers-reduced-motion: no-preference)', () => {
+        gsap.fromTo(
+          '.work-header > *',
+          { y: 34, opacity: 0 },
+          {
+            scrollTrigger: { trigger: container.current, start: 'top 85%' },
+            y: 0,
+            opacity: 1,
+            duration: 0.8,
+            stagger: 0.12,
+            ease: 'power3.out',
+          },
+        );
+
+        gsap.utils.toArray<HTMLElement>('.work-item').forEach((item) => {
+          gsap.fromTo(
+            item.querySelectorAll('.row-reveal'),
+            { y: 28, opacity: 0 },
+            {
+              scrollTrigger: { trigger: item, start: 'top 86%' },
+              y: 0,
+              opacity: 1,
+              duration: 0.7,
+              stagger: 0.07,
+              ease: 'power3.out',
+            },
+          );
+        });
+      });
+    },
+    { scope: container },
   );
 
-  /* ── Mobile breakpoint tracker ───────────────────────────────────────── */
-  useEffect(() => {
-    const mq = window.matchMedia('(max-width: 767px)');
-    const sync = (matches: boolean) => {
-      setIsMobileLayout(matches);
-    };
-    const handler = (e: MediaQueryListEvent) => sync(e.matches);
-    mq.addEventListener('change', handler);
-    return () => mq.removeEventListener('change', handler);
-  }, []);
-
-
-  /* ── Horizontal Scroll Logic for Mobile Arrows ─────────────────────── */
-  const scrollCards = (direction: 'left' | 'right') => {
-    if (scrollContainerRef.current) {
-      const scrollAmount = window.innerWidth * 0.85; // Roughly one card width
-      scrollContainerRef.current.scrollBy({
-        left: direction === 'left' ? -scrollAmount : scrollAmount,
-        behavior: 'smooth'
-      });
-    }
-  };
-  /* ── Horizontal Scroll Effect ─────────────────────────── */
-  useGSAP(() => {
-    if (!scrollWrapper.current || !container.current) return;
-
-    const mm = gsap.matchMedia();
-
-    // Only apply scroll-jacking on desktop devices
-    mm.add("(min-width: 768px)", () => {
-      const getScrollAmount = () => -(scrollWrapper.current!.scrollWidth - window.innerWidth);
-
-      const tl = gsap.timeline({
-        scrollTrigger: {
-          trigger: container.current,
-          pin: true,
-          anticipatePin: 1, // Fixes jitter when re-entering the pinned section from the bottom
-          scrub: true, // Use true for 1:1 responsiveness with Lenis (avoids double smoothing lag)
-          // Reduce the scroll distance by 50% so trackpad users don't have to swipe as much
-          end: () => `+=${scrollWrapper.current!.scrollWidth * 0.5}`, 
-          invalidateOnRefresh: true,
-        }
-      });
-
-      // 1. Initial Pause: Give the user time to read the very first project card
-      tl.to({}, { duration: 0.05 });
-
-      // 2. Horizontal Scroll: Move the wrapper to the left with GPU acceleration
-      tl.to(scrollWrapper.current, {
-        x: getScrollAmount,
-        ease: "none",
-        duration: 0.9,
-        force3D: true, // Force GPU acceleration to prevent layout thrashing and jitter
-      });
-
-      // 3. Final Pause: Give the user time to read the very last project card
-      tl.to({}, { duration: 0.05 });
-    });
-
-    return () => mm.revert();
-
-  }, { scope: container });
-
-  /* ── Trackpad Horizontal Scroll Mapping ────────────────────────────── */
-  useEffect(() => {
-    const el = container.current;
-    if (!el) return;
-
-    const onWheel = (e: WheelEvent) => {
-      // Only intercept on desktop where GSAP pinning is active
-      if (window.innerWidth >= 768) {
-        // If the user is swiping horizontally (trackpad)
-        if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
-          e.preventDefault();
-          
-          // Send a fake vertical wheel event so Lenis smooth-scrolls it naturally
-          // Slightly reduced the multiplier (0.6x) to make it less sensitive as requested
-          const simulatedEvent = new WheelEvent('wheel', {
-            deltaY: e.deltaX * 0.6,
-            deltaMode: e.deltaMode,
-            bubbles: true,
-            cancelable: true,
-          });
-          
-          window.dispatchEvent(simulatedEvent);
-        }
-      }
-    };
-
-    el.addEventListener('wheel', onWheel, { passive: false });
-    return () => el.removeEventListener('wheel', onWheel);
-  }, []);
-
-  /* ══════════════════════════ Render ════════════════════════════════════ */
   return (
-    <div className="w-full block">
-      <style>{`
-        .dynamic-pad {
-          padding-left: max(1.5rem, calc(50vw - 42.5vw));
-          padding-right: max(1.5rem, calc(50vw - 42.5vw));
-        }
-        @media (min-width: 768px) {
-          .dynamic-pad {
-            padding-left: max(3rem, calc(50vw - 450px));
-            padding-right: max(3rem, calc(50vw - 450px));
-          }
-        }
-        @media (min-width: 1024px) {
-          .dynamic-pad {
-            padding-left: max(3rem, calc(50vw - 562.5px));
-            padding-right: max(3rem, calc(50vw - 562.5px));
-          }
-        }
-      `}</style>
-      <section
-        id="projects"
-        ref={container}
-        className="w-full relative z-50 overflow-hidden h-fit"
-      >
-        {/* ── Header ─────────────────────────────────────────────────────── */}
-        <div className="w-full px-6 md:px-12 max-w-7xl mx-auto flex flex-col md:flex-row md:items-end justify-between gap-6 pt-16 md:pt-24 pb-8 md:pb-12 shrink-0">
-        <div>
-          <p className="text-sm font-mono uppercase tracking-[0.2em] text-white/40 mb-2" aria-hidden="true">
-            04 // Projects
-          </p>
-          <h2 className="text-4xl font-display font-medium tracking-tight text-gradient">
-            Selected Works
+    <section id="projects" ref={container} className="relative z-10 w-full">
+      {/* ── Section header ─────────────────────────────────────────────── */}
+      <div className="px-6 md:px-12 max-w-7xl mx-auto pt-[6vh] pb-[8vh]">
+        <div className="work-header">
+          <div className="flex items-baseline justify-between border-b border-white/[0.08] pb-4">
+            <span className="font-mono text-xs uppercase tracking-[0.2em] text-white/40">Selected work</span>
+          </div>
+
+          <h2 className="mt-10 font-display uppercase font-light leading-[0.92] tracking-[-0.04em] text-[clamp(2.8rem,9vw,9rem)] text-white">
+            Things I've<br />put into<br /><span className="font-medium">the world.</span>
           </h2>
+
+          <div className="mt-10 flex flex-wrap gap-x-10 gap-y-2">
+            <span className="font-mono text-xs uppercase tracking-[0.2em] text-white/40">{projects.length} projects</span>
+            <span className="font-mono text-xs uppercase tracking-[0.2em] text-white/40">AI / ML / Full-Stack / HCI</span>
+          </div>
         </div>
-        <a
-          href="https://github.com/Deepender25"
-          target="_blank"
-          rel="noreferrer"
-          className="flex items-center gap-2 text-sm font-mono text-white/60 hover:text-white transition-colors shrink-0"
-        >
-          View all on GitHub <ArrowRight size={14} />
-        </a>
       </div>
 
-      {/* ── Project List ────────────────────────────────────────────── */}
-      <div 
-        ref={scrollContainerRef}
-        className="w-full overflow-x-auto md:overflow-visible hide-scrollbar snap-x snap-mandatory md:snap-none"
-      >
-        <div 
-          ref={scrollWrapper}
-          className="flex flex-row gap-6 md:gap-12 pb-20 w-max dynamic-pad will-change-transform"
-        >
-          {featuredProjects.map((project, idx) => {
-            const Icon = (Icons as any)[project.icon];
+      {/* ── Work list ──────────────────────────────────────────────────── */}
+      <div>
+        {projects.map((project, index) => {
+          const clip = project.clip ?? '';
+          const poster = project.poster ?? '';
+          const hasClip = Boolean(clip);
+          const ghMatch = project.github.match(/github\.com\/([^/]+)\/([^/#?]+)/);
+          const coverSources = poster
+            ? [poster]
+            : ghMatch
+              ? [`https://opengraph.githubassets.com/1/${ghMatch[1]}/${ghMatch[2]}`]
+              : [];
 
-            return (
-              <div
-                key={project.title}
-                className="pcard snap-center w-[85vw] md:w-[900px] lg:w-[1125px] flex-shrink-0
-                  rounded-[32px] p-5 md:p-8 glass-panel flex flex-col md:h-[550px]"
-              >
-              <div className="grid grid-cols-1 md:grid-cols-12 gap-6 h-full w-full">
+          return (
+            <article key={project.title} className="work-item group relative border-t border-white/[0.08] last:border-b">
+              <div className="relative grid grid-cols-1 items-center gap-x-8 gap-y-8 px-6 md:px-12 py-12 md:py-16 max-w-7xl mx-auto md:grid-cols-12">
+                {/* Ghost numeral — anchored in the padding gutter, out of the grid flow */}
+                <span
+                  aria-hidden
+                  className="row-reveal pointer-events-none absolute left-2 top-1/2 hidden -translate-y-1/2 select-none font-display font-light leading-none tracking-[-0.05em] text-white/[0.09] text-[clamp(3.5rem,6.5vw,6rem)] lg:block"
+                >
+                  {pad(index + 1)}
+                </span>
 
-                {/* LEFT: details */}
-                <div className="md:col-span-5 flex flex-col justify-between h-full">
+                {/* Text block */}
+                <div className="col-span-1 flex flex-col items-start gap-4 md:col-span-7 lg:pl-14 xl:pl-20">
+                  <h3 className="row-reveal font-display font-medium uppercase tracking-[-0.03em] leading-none transition-transform duration-300 group-hover:translate-x-1 text-[clamp(1.9rem,3.6vw,3.4rem)]">
+                    <a
+                      href={`/work/${project.title.toLowerCase().replace(/\s+/g, '-')}`}
+                      data-cursor="Case Study"
+                      onClick={(event) => {
+                        event.preventDefault();
+                        navigate(`/work/${project.title.toLowerCase().replace(/\s+/g, '-')}`);
+                      }}
+                      className="text-white hover:text-white/90 focus-visible:outline-none"
+                    >
+                      {project.title}
+                    </a>
+                  </h3>
 
-                  {/* Links row */}
-                  <div className="flex justify-end items-start mb-6 md:mb-0">
-                    <div className="flex gap-1.5">
-                      {project.github !== '#' && (
-                        <a href={project.github} target="_blank" rel="noreferrer"
-                          className="p-3 rounded-full hover:bg-white/10 text-white/40 hover:text-white transition-colors">
-                          <Github size={20} />
-                        </a>
-                      )}
-                      {project.live !== '#' && (
-                        <a href={project.live} target="_blank" rel="noreferrer"
-                          className="p-3 rounded-full hover:bg-white/10 text-white/40 hover:text-white transition-colors">
-                          <ExternalLink size={20} />
-                        </a>
-                      )}
-                    </div>
-                  </div>
+                  <p className="row-reveal max-w-xl text-base font-light leading-relaxed text-white/55">
+                    {project.description}
+                  </p>
 
-                  {/* Title + description */}
-                  <div className="flex-grow flex flex-col justify-center my-3 md:my-4">
-                    <h3 className="text-2xl md:text-[2.3rem] font-display font-semibold tracking-tight leading-tight text-white mb-2 md:mb-4">
-                      <Title text={project.title} />
-                    </h3>
-                    <p className="text-white/65 font-light leading-relaxed text-sm md:text-[17px] line-clamp-3 md:line-clamp-none">
-                      {project.description}
-                    </p>
-                  </div>
-
-                  {/* Tech tags — limit to 5 on mobile */}
-                  <div className="flex flex-wrap gap-1.5 md:gap-2 mt-4 md:mt-auto">
-                    {project.tech.slice(0, isMobileLayout ? 5 : project.tech.length).map((t, i) => (
-                      <span key={i}
-                        className="text-[10px] md:text-[11px] font-mono text-white/45 bg-white/5 border border-white/5 px-2.5 md:px-3 py-1.5 md:py-2 rounded-full uppercase tracking-wider">
-                        {t}
+                  <div className="row-reveal flex flex-wrap items-center gap-x-3 gap-y-2">
+                    {[project.category ?? project.tech[0], project.tech[0]].filter(Boolean).map((part, i, arr) => (
+                      <span key={i} className="flex items-center gap-x-3">
+                        {i > 0 && i <= arr.length && <span aria-hidden className="text-white/20">·</span>}
+                        <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-white/45">{part}</span>
                       </span>
                     ))}
                   </div>
 
-                  {/* Mobile Demo Video Button */}
-                  {isMobileLayout && project.video && (
-                    <button
-                      onClick={() => setMobileVideo(project.video)}
-                      className="mt-5 w-full py-3 rounded-[14px] bg-white/10 text-white font-medium text-[13px] tracking-wide flex items-center justify-center gap-2 border border-white/20 active:scale-[0.98] transition-all uppercase hover:bg-white/15"
-                    >
-                      <MonitorPlay size={16} /> Watch Demo Video
-                    </button>
-                  )}
-                </div>
-
-                {/* RIGHT: YouTube player — hidden on mobile */}
-                <div
-                  className="md:col-span-7 relative rounded-2xl overflow-hidden border border-white/10 bg-black hidden md:block group"
-                  style={{ minHeight: 0 }}
-                >
-                  {project.video ? (
-                    <>
-                      <iframe
-                        src={`${project.video}?autoplay=1&mute=1&loop=1&playlist=${project.video.split('/').pop()}&rel=0&controls=0&modestbranding=1&vq=hd1080&hd=1`}
-                        title={`${project.title} Demo`}
-                        className="absolute inset-0 w-full h-full pointer-events-none"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
-                        allowFullScreen
-                      />
-                      {/* Performance Shield & Interaction Layer */}
-                      <div 
-                        className="absolute inset-0 z-10 bg-black/0 group-hover:bg-black/30 transition-all duration-300 cursor-pointer"
-                        onClick={() => setMobileVideo(project.video)}
-                        aria-label="Play full video"
+                  {/* Links */}
+                  <div className="row-reveal flex flex-wrap items-center gap-3 pt-2">
+                    {project.github !== '#' && (
+                      <a
+                        href={project.github}
+                        target="_blank"
+                        rel="noreferrer"
+                        data-cursor="Source"
+                        className="flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-4 py-2 font-mono text-[11px] uppercase tracking-wider text-white transition-all duration-300 hover:bg-white hover:text-black active:scale-95"
                       >
-                        <div className="absolute top-6 right-6 px-4 py-2.5 rounded-full bg-black/50 backdrop-blur-xl border border-white/20 flex items-center gap-2.5 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-[-10px] group-hover:translate-y-0 shadow-xl">
-                          <MonitorPlay size={16} className="text-white" />
-                          <span className="text-white text-[11px] font-mono uppercase tracking-widest font-medium mt-[1px]">Play Full Demo</span>
-                        </div>
-                      </div>
-                    </>
-                  ) : (
-                    <div className="absolute inset-0 flex items-center justify-center bg-white/5 pointer-events-none">
-                      <span className="text-white/40 font-mono text-sm">No Video Available</span>
-                    </div>
-                  )}
+                        <Github size={14} />
+                        Source Code
+                      </a>
+                    )}
+                    {project.live !== '#' && (
+                      <a
+                        href={project.live}
+                        target="_blank"
+                        rel="noreferrer"
+                        data-cursor="Visit Site"
+                        className="flex items-center gap-2 rounded-full bg-white px-4 py-2 font-mono text-[11px] uppercase tracking-wider font-medium text-black transition-all duration-300 hover:bg-white/90 hover:scale-[1.03] active:scale-95"
+                      >
+                        Live Site
+                        <ArrowUpRight size={13} />
+                      </a>
+                    )}
+                    {project.msStore && project.msStore !== '#' && (
+                      <a href={project.msStore} target="_blank" rel="noreferrer" className={ghostPill}>
+                        <Store size={14} />
+                        Microsoft Store
+                      </a>
+                    )}
+                    {project.showStars && project.github !== '#' && (
+                      <GithubStars
+                        repo={project.github.replace(/^https?:\/\/github\.com\//, '').replace(/\/+$/, '')}
+                        href={`${project.github}/stargazers`}
+                      />
+                    )}
+                  </div>
                 </div>
 
+                {/* Playing video — click for semi-fullscreen */}
+                <button
+                  type="button"
+                  data-media-index={index}
+                  data-cursor={hasClip ? 'Play Demo' : 'View Source'}
+                  onClick={() => {
+                    if (hasClip) setLightbox({ src: clip, title: project.title });
+                    else window.open(project.github, '_blank', 'noopener,noreferrer');
+                  }}
+                  aria-label={hasClip ? `Play ${project.title} demo video` : `Open ${project.title} on GitHub`}
+                  className="group/media relative col-span-1 block aspect-video w-full cursor-pointer overflow-hidden rounded-2xl border border-white/[0.08] bg-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white/40 md:col-span-5"
+                >
+                  <div className="absolute inset-0 transition-transform duration-[600ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover/media:scale-[1.02]">
+                    <Cover sources={coverSources} alt={`${project.title} cover`} />
+
+                    {hasClip && streaming.has(index) && (
+                      portrait.has(index) ? (
+                        <>
+                          {/* Blurred self-fill backdrop for vertical footage */}
+                          <video
+                            src={clip}
+                            poster={poster || undefined}
+                            autoPlay
+                            muted
+                            loop
+                            playsInline
+                            preload="auto"
+                            disablePictureInPicture
+                            aria-hidden
+                            tabIndex={-1}
+                            onLoadedMetadata={(event) => {
+                              const el = event.currentTarget;
+                              if (el.videoHeight > el.videoWidth) markPortrait(index);
+                            }}
+                            className="absolute inset-0 h-full w-full scale-125 object-cover blur-2xl brightness-[0.55]"
+                          />
+                          <video
+                            src={clip}
+                            poster={poster || undefined}
+                            autoPlay
+                            muted
+                            loop
+                            playsInline
+                            preload="auto"
+                            disablePictureInPicture
+                            onLoadedMetadata={(event) => {
+                              const el = event.currentTarget;
+                              if (el.videoHeight > el.videoWidth) markPortrait(index);
+                            }}
+                            className="absolute inset-0 h-full w-full object-contain"
+                          />
+                        </>
+                      ) : (
+                        <video
+                          src={clip}
+                          poster={poster || undefined}
+                          autoPlay
+                          muted
+                          loop
+                          playsInline
+                          preload="auto"
+                          disablePictureInPicture
+                          onLoadedMetadata={(event) => {
+                            const el = event.currentTarget;
+                            if (el.videoHeight > el.videoWidth) markPortrait(index);
+                          }}
+                          className="absolute inset-0 h-full w-full object-cover"
+                        />
+                       )
+                     )}
+                   </div>
+
+                  {/* Click-to-expand affordance */}
+                  {hasClip && (
+                    <span className="pointer-events-none absolute bottom-4 right-4 flex items-center gap-2 rounded-full border border-white/[0.12] bg-black/50 px-3 py-1.5 font-mono text-[10px] uppercase tracking-widest text-white/80 opacity-90 backdrop-blur-md transition-opacity duration-300 group-hover/media:opacity-100">
+                      <Play size={11} />
+                      Expand
+                    </span>
+                  )}
+                </button>
               </div>
-            </div>
+            </article>
           );
         })}
-        </div>
       </div>
 
-      {/* ── Mobile Navigation Arrows ──────────────────────────────────── */}
-      <div className="md:hidden flex justify-center items-center gap-4 mt-6">
-        <button 
-          aria-label="Scroll left"
-          onClick={() => scrollCards('left')}
-          className="p-3.5 rounded-full bg-white/5 border border-white/10 text-white/60 hover:text-white hover:bg-white/10 active:scale-95 transition-all shadow-lg backdrop-blur-md"
-        >
-          <ArrowLeft size={20} />
-        </button>
-        <button 
-          aria-label="Scroll right"
-          onClick={() => scrollCards('right')}
-          className="p-3.5 rounded-full bg-white/5 border border-white/10 text-white/60 hover:text-white hover:bg-white/10 active:scale-95 transition-all shadow-lg backdrop-blur-md"
-        >
-          <ArrowRight size={20} />
-        </button>
-      </div>
-
-      {/* ── Mobile Fullscreen Video Overlay ────────────────────────────── */}
-      {mobileVideo && (
-        <div 
-          className="fixed inset-0 z-[9999] bg-black/70 backdrop-blur-sm flex flex-col items-center justify-center p-4 animate-in fade-in duration-200"
-          onClick={() => setMobileVideo(null)}
-        >
-          <div 
-            className="w-full max-w-md flex flex-col gap-3"
-            onClick={(e) => e.stopPropagation()}
+      {/* ── Semi-fullscreen player ─────────────────────────────────────── */}
+      <AnimatePresence>
+        {lightbox && (
+          <motion.div
+            key="lightbox"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            onClick={() => setLightbox(null)}
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 p-4 backdrop-blur-md md:p-10"
           >
-            <button 
-              onClick={() => setMobileVideo(null)}
-              className="self-start flex items-center gap-2 px-4 py-2 rounded-full bg-black/40 backdrop-blur-md border border-white/20 text-white hover:bg-white/10 hover:scale-105 active:scale-90 transition-all shadow-lg text-sm font-medium"
+            <motion.div
+              ref={lightboxTrapRef}
+              initial={{ opacity: 0, scale: 0.94, y: 16 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.96, y: 10 }}
+              transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+              onClick={(event) => event.stopPropagation()}
+              className="glass-panel-strong relative w-full max-w-5xl overflow-hidden rounded-2xl"
             >
-              <ArrowLeft size={18} /> Back
-            </button>
-            <div className="relative w-full max-w-5xl mx-auto aspect-video rounded-2xl overflow-hidden shadow-2xl border border-white/20 bg-black">
-              <iframe
-                src={`${mobileVideo}?autoplay=1&mute=0&rel=0&controls=1&modestbranding=1&vq=hd1080&hd=1&iv_load_policy=3&fs=1`}
-                title="Mobile Demo Video"
-                className="absolute inset-0 w-full h-full border-none"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
-                allowFullScreen
-              />
-            </div>
-          </div>
-        </div>
-      )}
+              <div className="flex items-center justify-between border-b border-white/10 px-5 py-3">
+                <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-white/60">
+                  {lightbox.title} — Demo
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setLightbox(null)}
+                  data-cursor="Close"
+                  aria-label="Close video"
+                  className="rounded-full border border-white/15 bg-white/5 p-2 text-white/70 transition-all duration-300 hover:bg-white/15 hover:text-white active:scale-90"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+
+              <div className="aspect-video w-full bg-black">
+                <video
+                  key={lightbox.src}
+                  src={lightbox.src}
+                  controls
+                  autoPlay
+                  playsInline
+                  className="h-full w-full bg-black"
+                />
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </section>
-    </div>
   );
 }

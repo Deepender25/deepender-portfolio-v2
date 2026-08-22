@@ -3,12 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import Lenis from 'lenis';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 gsap.registerPlugin(ScrollTrigger);
 import { navigate } from './utils/navigation';
+import portfolioData from './data/portfolio.json';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import About from './components/About';
@@ -17,16 +18,66 @@ import Projects from './components/Projects';
 import Skills from './components/Skills';
 import Contact from './components/Contact';
 import Footer from './components/Footer';
+import Testimonials from './components/Testimonials';
+import WorkPage from './components/WorkPage';
 import { EtheralShadow } from './components/ui/etheral-shadow';
 import { Waves } from './components/ui/wave-background';
-import ResumeModal from './components/ResumeModal';
 import HangingIdCard from './components/HangingIdCard';
+import CursorLabel from './components/ui/CursorLabel';
+
+const ResumeModal = lazy(() => import('./components/ResumeModal'));
+
+/** Thin hairline at the very top of the page tracking overall scroll. */
+function ScrollProgress() {
+  const barRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    let raf = 0;
+    const update = () => {
+      raf = 0;
+      const el = barRef.current;
+      if (!el) return;
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      el.style.transform = `scaleX(${max > 0 ? Math.min(1, window.scrollY / max) : 0})`;
+    };
+    const onScroll = () => {
+      if (!raf) raf = requestAnimationFrame(update);
+    };
+    update();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, []);
+
+  return (
+    <div
+      aria-hidden
+      ref={barRef}
+      className="fixed left-0 right-0 top-0 z-[80] h-[2px] origin-left bg-white/40"
+      style={{ transform: 'scaleX(0)' }}
+    />
+  );
+}
 
 export default function App() {
   const envBgType = import.meta.env.VITE_BACKGROUND_TYPE || '0';
   const envBgCycleMins = parseInt(import.meta.env.VITE_BACKGROUND_CYCLE_MINUTES || '10', 10);
   const [isResumeOpen, setIsResumeOpen] = useState(false);
   const [bgCycle, setBgCycle] = useState(0);
+  const [route, setRoute] = useState(() => window.location.pathname);
+
+  /* Case-study overlay route: /work/:slug */
+  const workSlug = route.startsWith('/work/')
+    ? decodeURIComponent(route.slice('/work/'.length))
+    : null;
+  const workProject =
+    portfolioData.projects.find(
+      (p) => p.title.toLowerCase().replace(/\s+/g, '-') === workSlug,
+    ) ?? null;
 
   useEffect(() => {
     if (envBgType === '0-1') {
@@ -49,6 +100,7 @@ export default function App() {
     }
 
     const handleLocationChange = () => {
+      setRoute(window.location.pathname);
       if (window.location.pathname === '/resume') {
         setIsResumeOpen(true);
       } else {
@@ -63,9 +115,6 @@ export default function App() {
     const path = window.location.pathname;
     const sectionId = path.substring(1);
     if (['about', 'skills', 'experience', 'projects', 'contact'].includes(sectionId)) {
-      if (sectionId === 'projects') {
-        window.dispatchEvent(new CustomEvent('reset-projects'));
-      }
       setTimeout(() => {
         document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth' });
       }, 500);
@@ -105,8 +154,16 @@ export default function App() {
 
   return (
     <div className="relative min-h-screen text-white font-sans selection:bg-white/20 selection:text-white overflow-x-hidden">
-      <ResumeModal isOpen={isResumeOpen} onClose={closeResume} />
-      
+      <CursorLabel />
+      <ScrollProgress />
+      <Suspense fallback={null}>
+        <ResumeModal isOpen={isResumeOpen} onClose={closeResume} />
+      </Suspense>
+
+      {workProject && (
+        <WorkPage slug={workSlug!} onClose={() => navigate('/')} />
+      )}
+
       <HangingIdCard />
 
       {/* Top Edge Hard-to-Soft Blur Gradient */}
@@ -148,6 +205,7 @@ export default function App() {
         <Skills />
         <Experience />
         <Projects />
+        <Testimonials />
         <Contact />
       </main>
       <Footer />

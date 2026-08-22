@@ -20,6 +20,15 @@ const contactLimiter = rateLimit({
 
 app.use('/api/contact', contactLimiter);
 
+// Escape user-supplied strings before embedding them in the HTML email body
+const escapeHtml = (value) =>
+  String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+
 // POST /api/contact
 app.post('/api/contact', async (req, res) => {
   const { name, email, message } = req.body;
@@ -27,6 +36,12 @@ app.post('/api/contact', async (req, res) => {
   if (!name || !email || !message) {
     return res.status(400).json({ error: 'All fields are required.' });
   }
+
+  const safeName = escapeHtml(name.trim().slice(0, 120));
+  const safeEmail = escapeHtml(String(email).trim().slice(0, 200));
+  const safeMessage = escapeHtml(message.slice(0, 5000));
+  // Subject is a plain-text header — strip control chars to block header injection
+  const safeSubjectName = String(name).trim().replace(/[\r\n\t]+/g, ' ').slice(0, 120);
 
   const transporter = nodemailer.createTransport({
     service: 'gmail',
@@ -40,7 +55,7 @@ app.post('/api/contact', async (req, res) => {
     from: `"Portfolio Contact" <${process.env.SENDER_EMAIL}>`,
     to: process.env.RECEIVER_EMAIL, // your personal email where you receive messages
     replyTo: email,
-    subject: `New Message from ${name} — Portfolio`,
+    subject: `New Message from ${safeSubjectName} — Portfolio`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #1a1a1a; border-bottom: 2px solid #eee; padding-bottom: 12px;">
@@ -49,18 +64,18 @@ app.post('/api/contact', async (req, res) => {
         <table style="width:100%; border-collapse:collapse; margin-top:16px;">
           <tr>
             <td style="padding:8px 0; color:#666; font-weight:bold; width:100px;">Name:</td>
-            <td style="padding:8px 0; color:#1a1a1a;">${name}</td>
+            <td style="padding:8px 0; color:#1a1a1a;">${safeName}</td>
           </tr>
           <tr>
             <td style="padding:8px 0; color:#666; font-weight:bold;">Email:</td>
             <td style="padding:8px 0; color:#1a1a1a;">
-              <a href="mailto:${email}" style="color:#0070f3;">${email}</a>
+              <a href="mailto:${safeEmail}" style="color:#0070f3;">${safeEmail}</a>
             </td>
           </tr>
         </table>
         <h3 style="margin-top:24px; color:#1a1a1a;">Message:</h3>
         <div style="background:#f5f5f5; border-radius:8px; padding:16px; color:#333; white-space:pre-wrap; line-height:1.6;">
-          ${message}
+          ${safeMessage}
         </div>
         <p style="margin-top:24px; color:#999; font-size:12px;">
           Sent via your portfolio contact form.

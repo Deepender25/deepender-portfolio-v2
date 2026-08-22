@@ -135,3 +135,8 @@ dist-ssr/
 
 .vercel
 /.agents
+# Raw video sources (optimized .webm live in public/videos)
+videos/
+
+# Personal design reference material
+reference/

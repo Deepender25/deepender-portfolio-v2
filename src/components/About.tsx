@@ -80,6 +80,7 @@ export default function About() {
               <a 
                 key={i} 
                 href={cert.link !== "#" ? cert.link : undefined}
+                data-cursor="Verify"
                 target={cert.link !== "#" ? "_blank" : undefined}
                 rel="noreferrer"
                 className={`flex items-center justify-between p-4 bg-white/[0.02] border border-white/10 rounded-2xl transition-all duration-300 ${cert.link !== "#" ? 'cursor-pointer hover:bg-white/[0.06] hover:-translate-y-0.5' : 'cursor-default'}`}

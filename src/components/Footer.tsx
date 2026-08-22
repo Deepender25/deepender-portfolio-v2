@@ -5,8 +5,8 @@ export default function Footer() {
         © {new Date().getFullYear()} Deepender Yadav.
       </p>
       <div className="flex items-center gap-6">
-        <a href="https://github.com/Deepender25" className="text-white/40 hover:text-white transition-colors text-xs font-mono uppercase tracking-widest">GitHub</a>
-        <a href="https://www.linkedin.com/in/deepender25/" className="text-white/40 hover:text-white transition-colors text-xs font-mono uppercase tracking-widest">LinkedIn</a>
+        <a href="https://github.com/Deepender25" data-cursor="GitHub" className="text-white/40 hover:text-white transition-colors text-xs font-mono uppercase tracking-widest">GitHub</a>
+        <a href="https://www.linkedin.com/in/deepender25/" data-cursor="LinkedIn" className="text-white/40 hover:text-white transition-colors text-xs font-mono uppercase tracking-widest">LinkedIn</a>
       </div>
     </footer>
   );
