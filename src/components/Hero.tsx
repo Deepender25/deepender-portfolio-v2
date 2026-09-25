@@ -3,9 +3,10 @@ import portfolioData from '../data/portfolio.json';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { ArrowRight, Github, Linkedin, Mail } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { ScrambleText } from './ui/ScrambleText';
 import { Magnetic } from './ui/Magnetic';
+import { SocialPreviewDock } from './ui/SocialPreviewDock';
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 
@@ -172,24 +173,29 @@ export default function Hero() {
                         <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
                       </a>
                     </Magnetic>
-                    <div className="flex items-center gap-3 md:gap-4">
-                      {[
-                        { icon: Github, href: portfolioData.hero.social.github, label: 'GitHub' },
-                        { icon: Linkedin, href: portfolioData.hero.social.linkedin, label: 'LinkedIn' },
-                        { icon: Mail, href: portfolioData.hero.social.email, label: 'Email' }
-                      ].map((social, i) => (
-                        <a
-                          key={i}
-                          href={social.href}
-                          data-cursor={social.label}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="glass-pill p-3 md:p-4 rounded-full text-white/60 hover:text-white hover:scale-110 transition-all"
-                        >
-                          <social.icon size={20} />
-                        </a>
-                      ))}
-                    </div>
+                    <SocialPreviewDock
+                      email={portfolioData.contact.email}
+                      profile={{
+                        username: "Deepender25",
+                        name: "Deepender Yadav",
+                        headline: "AI/ML Engineer & Full-Stack Developer",
+                        subheadline: "B.Tech CSE (AI/ML) @ Gurugram University",
+                        location: "Gurugram, India",
+                        bio: portfolioData.hero.description1,
+                        avatarUrl: "/Deepender.jpg",
+                        status: portfolioData.hero.badgeText,
+                        links: {
+                          github: portfolioData.hero.social.github,
+                          linkedin: portfolioData.hero.social.linkedin,
+                          email: portfolioData.hero.social.email,
+                        },
+                      }}
+                      bannerColors={{
+                        linkedin: ["#0a66c2", "#004182", "#032147"],
+                        github: ["#27272a", "#18181b", "#09090b"],
+                        email: ["#064e3b", "#022c22", "#09090b"],
+                      }}
+                    />
                   </div>
                 </div>
               </div>
