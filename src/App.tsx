@@ -24,6 +24,16 @@ import { EtheralShadow } from './components/ui/etheral-shadow';
 import { Waves } from './components/ui/wave-background';
 import HangingIdCard from './components/HangingIdCard';
 import CursorLabel from './components/ui/CursorLabel';
+import ProximitySidebar, { type ProximitySection } from './components/ui/ProximitySidebar';
+
+const portfolioSections: ProximitySection[] = [
+  { id: 'hero', label: 'Overview', kind: 'title', level: 1 },
+  { id: 'about', label: 'About', kind: 'subtitle', level: 2 },
+  { id: 'skills', label: 'Skills', kind: 'section', level: 3 },
+  { id: 'experience', label: 'Experience', kind: 'section', level: 3 },
+  { id: 'projects', label: 'Selected Work', kind: 'subtitle', level: 2 },
+  { id: 'contact', label: 'Contact', kind: 'subtitle', level: 2 },
+];
 
 const ResumeModal = lazy(() => import('./components/ResumeModal'));
 
@@ -165,6 +175,13 @@ export default function App() {
       )}
 
       <HangingIdCard />
+
+      {/* Left Minimap Proximity Sidebar */}
+      <ProximitySidebar
+        sections={portfolioSections}
+        side="left"
+        className="fixed left-3 xl:left-6 top-1/2 -translate-y-1/2 z-40 hidden lg:flex pointer-events-auto"
+      />
 
       {/* Top Edge Hard-to-Soft Blur Gradient */}
       <div 

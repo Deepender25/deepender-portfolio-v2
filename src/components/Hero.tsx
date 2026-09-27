@@ -131,7 +131,7 @@ export default function Hero() {
   }, { scope: container });
 
   return (
-    <section ref={container} className="min-h-screen flex items-center pt-32 px-6 md:px-12 max-w-7xl mx-auto relative">
+    <section id="hero" ref={container} className="min-h-screen flex items-center pt-32 px-6 md:px-12 max-w-7xl mx-auto relative">
       <div className="w-full relative z-10 flex flex-col gap-12">
 
         {/* Top Section: Heading & Buttons (Left) */}
