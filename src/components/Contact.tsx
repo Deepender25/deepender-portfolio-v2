@@ -1,6 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import portfolioData from '../data/portfolio.json';
-import { ArrowRight, Check, CheckCircle2, Copy, Github, Linkedin, Mail, Phone, XCircle } from 'lucide-react';
+import { AnimatePresence, motion } from 'motion/react';
+import { isTypingTarget } from '../lib/utils';
+import { scrollToTarget } from '../utils/navigation';
+import { ArrowRight, Check, CheckCircle2, Copy, Linkedin, Mail, Phone, XCircle } from 'lucide-react';
 
 interface FormState {
   name: string;
@@ -22,11 +25,11 @@ export default function Contact() {
   useEffect(() => {
     let buffer = '';
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key.length !== 1) return;
+      if (event.key.length !== 1 || isTypingTarget(event.target)) return;
       buffer = (buffer + event.key.toLowerCase()).slice(-7);
       if (buffer === 'hiredev') {
         buffer = '';
-        document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' });
+        scrollToTarget('contact');
         setFlashEmail(true);
         window.setTimeout(() => setFlashEmail(false), 2600);
       }
@@ -61,7 +64,8 @@ export default function Contact() {
         body: JSON.stringify(form),
       });
 
-      const data = await res.json();
+      // A platform error page may not be JSON — fall back to a generic message
+      const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
         throw new Error(data.error || 'Something went wrong.');
@@ -111,7 +115,6 @@ export default function Contact() {
                   <button
                     type="button"
                     onClick={copyEmail}
-                    data-cursor="Copy Email"
                     aria-label={emailCopied ? 'Email copied' : 'Copy email address'}
                     title="Copy email address"
                     className="rounded-full border border-white/15 bg-white/5 p-2 text-white/60 transition-all duration-300 hover:bg-white/15 hover:text-white active:scale-90"
@@ -119,13 +122,13 @@ export default function Contact() {
                     {emailCopied ? <Check size={13} className="text-green-400" /> : <Copy size={13} />}
                   </button>
                 </div>
-                <a href={`tel:${portfolioData.contact.phone.replace(/\s+/g, '')}`} data-cursor="Call Me" className="contact-link flex items-center gap-3 md:gap-4 text-white/80 hover:text-white transition-colors group w-full md:w-fit">
+                <a href={`tel:${portfolioData.contact.phone.replace(/\s+/g, '')}`} className="contact-link flex items-center gap-3 md:gap-4 text-white/80 hover:text-white transition-colors group w-full md:w-fit">
                   <div className="shrink-0 w-10 h-10 md:w-12 md:h-12 rounded-full glass-pill flex items-center justify-center group-hover:bg-white group-hover:text-black transition-all">
                     <Phone size={18} />
                   </div>
                   <span className="font-light text-sm md:text-lg break-all md:break-normal">{portfolioData.contact.phone}</span>
                 </a>
-                <a href={portfolioData.contact.linkedinUrl} target="_blank" rel="noreferrer" data-cursor="LinkedIn" className="contact-link flex items-center gap-3 md:gap-4 text-white/80 hover:text-white transition-colors group w-full md:w-fit">
+                <a href={portfolioData.contact.linkedinUrl} target="_blank" rel="noreferrer" className="contact-link flex items-center gap-3 md:gap-4 text-white/80 hover:text-white transition-colors group w-full md:w-fit">
                   <div className="shrink-0 w-10 h-10 md:w-12 md:h-12 rounded-full glass-pill flex items-center justify-center group-hover:bg-white group-hover:text-black transition-all">
                     <Linkedin size={18} />
                   </div>
@@ -148,7 +151,7 @@ export default function Contact() {
                       className="peer w-full bg-transparent border-b border-white/20 py-3 text-white placeholder-transparent focus:outline-none focus:border-white transition-colors"
                       placeholder="Name"
                     />
-                    <label htmlFor="name" className="absolute left-0 top-3 text-white/40 text-sm font-light transition-all peer-focus:-top-4 peer-focus:text-xs peer-focus:text-white/60 peer-valid:-top-4 peer-valid:text-xs peer-valid:text-white/60">
+                    <label htmlFor="name" className="absolute left-0 top-3 text-white/40 text-sm font-light transition-all peer-focus:-top-4 peer-focus:text-xs peer-focus:text-white/60 peer-[:not(:placeholder-shown)]:-top-4 peer-[:not(:placeholder-shown)]:text-xs peer-[:not(:placeholder-shown)]:text-white/60">
                       Your Name
                     </label>
                   </div>
@@ -164,7 +167,7 @@ export default function Contact() {
                       className="peer w-full bg-transparent border-b border-white/20 py-3 text-white placeholder-transparent focus:outline-none focus:border-white transition-colors"
                       placeholder="Email"
                     />
-                    <label htmlFor="email" className="absolute left-0 top-3 text-white/40 text-sm font-light transition-all peer-focus:-top-4 peer-focus:text-xs peer-focus:text-white/60 peer-valid:-top-4 peer-valid:text-xs peer-valid:text-white/60">
+                    <label htmlFor="email" className="absolute left-0 top-3 text-white/40 text-sm font-light transition-all peer-focus:-top-4 peer-focus:text-xs peer-focus:text-white/60 peer-[:not(:placeholder-shown)]:-top-4 peer-[:not(:placeholder-shown)]:text-xs peer-[:not(:placeholder-shown)]:text-white/60">
                       Your Email
                     </label>
                   </div>
@@ -180,29 +183,32 @@ export default function Contact() {
                       className="peer w-full bg-transparent border-b border-white/20 py-3 text-white placeholder-transparent focus:outline-none focus:border-white transition-colors resize-none"
                       placeholder="Message"
                     ></textarea>
-                    <label htmlFor="message" className="absolute left-0 top-3 text-white/40 text-sm font-light transition-all peer-focus:-top-4 peer-focus:text-xs peer-focus:text-white/60 peer-valid:-top-4 peer-valid:text-xs peer-valid:text-white/60">
+                    <label htmlFor="message" className="absolute left-0 top-3 text-white/40 text-sm font-light transition-all peer-focus:-top-4 peer-focus:text-xs peer-focus:text-white/60 peer-[:not(:placeholder-shown)]:-top-4 peer-[:not(:placeholder-shown)]:text-xs peer-[:not(:placeholder-shown)]:text-white/60">
                       Message
                     </label>
                   </div>
                 </div>
 
-                {status === 'success' && (
-                  <div className="flex items-center gap-2 text-green-400 text-sm animate-in fade-in slide-in-from-top-2">
-                    <CheckCircle2 size={16} />
-                    Message sent! I'll get back to you soon.
-                  </div>
-                )}
-                {status === 'error' && (
-                  <div className="flex items-center gap-2 text-red-400 text-sm animate-in fade-in slide-in-from-top-2">
-                    <XCircle size={16} />
-                    {errorMsg}
-                  </div>
-                )}
+                <AnimatePresence initial={false}>
+                  {(status === 'success' || status === 'error') && (
+                    <motion.div
+                      key={status}
+                      role="status"
+                      initial={{ opacity: 0, y: -4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.2, ease: 'easeOut' }}
+                      className={`flex items-center gap-2 text-sm ${status === 'success' ? 'text-green-400' : 'text-red-400'}`}
+                    >
+                      {status === 'success' ? <CheckCircle2 size={16} /> : <XCircle size={16} />}
+                      {status === 'success' ? "Message sent! I'll get back to you soon." : errorMsg}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
 
                 <button
                   type="submit"
                   disabled={status === 'submitting'}
-                  data-cursor={status === 'submitting' ? 'Sending' : 'Send It'}
                   className="w-full flex justify-center items-center gap-2 bg-white text-black px-8 py-4 rounded-xl text-sm font-medium hover:bg-white/90 transition-all disabled:opacity-50 hover:scale-[1.02] active:scale-[0.98]"
                 >
                   {status === 'idle' && <><span>Send Message</span><ArrowRight size={16} /></>}

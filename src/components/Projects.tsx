@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import portfolioData from '../data/portfolio.json';
-import { ArrowUpRight, ExternalLink, Github, Play, Star, Store, X } from 'lucide-react';
+import { ArrowUpRight, Github, Play, Star, Store, X } from 'lucide-react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { navigate } from '../utils/navigation';
 import { useFocusTrap } from '../lib/focus-trap';
+import { useScrollLock } from '../lib/scroll-lock';
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 
@@ -140,18 +141,51 @@ export default function Projects() {
     return () => observer.disconnect();
   }, []);
 
-  /* ── Lightbox: escape to close + body scroll lock ─────────────────────── */
+  /* ── Only decode what is on screen: rows in view play, the rest pause ──── */
+  const [inView, setInView] = useState<ReadonlySet<number>>(new Set());
+
+  useEffect(() => {
+    const stage = container.current;
+    if (!stage) return;
+    const targets = stage.querySelectorAll<HTMLElement>('[data-media-index]');
+
+    const observer = new IntersectionObserver((entries) => {
+      setInView((prev) => {
+        const next = new Set(prev);
+        entries.forEach((entry) => {
+          const idx = Number((entry.target as HTMLElement).dataset.mediaIndex);
+          if (entry.isIntersecting) next.add(idx);
+          else next.delete(idx);
+        });
+        return next;
+      });
+    });
+
+    targets.forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
+  }, []);
+
+  /* Re-sync whenever a player mounts, swaps (portrait), or the lightbox takes over */
+  useEffect(() => {
+    container.current
+      ?.querySelectorAll<HTMLVideoElement>('[data-media-index] video')
+      .forEach((video) => {
+        const row = video.closest('[data-media-index]') as HTMLElement | null;
+        const visible = row ? inView.has(Number(row.dataset.mediaIndex)) : false;
+        if (visible && !lightbox) video.play().catch(() => {});
+        else video.pause();
+      });
+  }, [inView, streaming, portrait, lightbox]);
+
+  /* ── Lightbox: escape to close + page scroll lock ─────────────────────── */
+  useScrollLock(Boolean(lightbox));
   useEffect(() => {
     if (!lightbox) return;
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') setLightbox(null);
     };
     window.addEventListener('keydown', onKeyDown);
-    document.body.style.overflow = 'hidden';
-    return () => {
-      window.removeEventListener('keydown', onKeyDown);
-      document.body.style.overflow = '';
-    };
+    return () => window.removeEventListener('keydown', onKeyDown);
   }, [lightbox]);
 
   /* ── Scroll choreography — quiet editorial reveals ────────────────────── */
@@ -198,7 +232,7 @@ export default function Projects() {
       <div className="px-6 md:px-12 max-w-7xl mx-auto pt-[6vh] pb-[8vh]">
         <div className="work-header">
           <div className="flex items-baseline justify-between border-b border-white/[0.08] pb-4">
-            <span className="font-mono text-xs uppercase tracking-[0.2em] text-white/40">Selected work</span>
+            <span className="font-mono text-xs uppercase tracking-[0.2em] text-white/40" aria-hidden="true">04 // Selected work</span>
           </div>
 
           <h2 className="mt-10 font-display uppercase font-light leading-[0.92] tracking-[-0.04em] text-[clamp(2.8rem,9vw,9rem)] text-white">
@@ -238,15 +272,15 @@ export default function Projects() {
 
                 {/* Text block */}
                 <div className="col-span-1 flex flex-col items-start gap-4 md:col-span-7 lg:pl-14 xl:pl-20">
-                  <h3 className="row-reveal font-display font-medium uppercase tracking-[-0.03em] leading-none transition-transform duration-300 group-hover:translate-x-1 text-[clamp(1.9rem,3.6vw,3.4rem)]">
+                  <h3 className="row-reveal font-display font-medium uppercase tracking-[-0.03em] leading-none text-[clamp(1.9rem,3.6vw,3.4rem)]">
                     <a
                       href={`/work/${project.title.toLowerCase().replace(/\s+/g, '-')}`}
-                      data-cursor="Case Study"
+                      data-cursor="Case study"
                       onClick={(event) => {
                         event.preventDefault();
                         navigate(`/work/${project.title.toLowerCase().replace(/\s+/g, '-')}`);
                       }}
-                      className="text-white hover:text-white/90 focus-visible:outline-none"
+                      className="inline-block text-white transition-transform duration-300 ease-out group-hover:translate-x-1 hover:text-white/90 focus-visible:outline-none"
                     >
                       {project.title}
                     </a>
@@ -272,7 +306,6 @@ export default function Projects() {
                         href={project.github}
                         target="_blank"
                         rel="noreferrer"
-                        data-cursor="Source"
                         className="flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-4 py-2 font-mono text-[11px] uppercase tracking-wider text-white transition-all duration-300 hover:bg-white hover:text-black active:scale-95"
                       >
                         <Github size={14} />
@@ -284,7 +317,6 @@ export default function Projects() {
                         href={project.live}
                         target="_blank"
                         rel="noreferrer"
-                        data-cursor="Visit Site"
                         className="flex items-center gap-2 rounded-full bg-white px-4 py-2 font-mono text-[11px] uppercase tracking-wider font-medium text-black transition-all duration-300 hover:bg-white/90 hover:scale-[1.03] active:scale-95"
                       >
                         Live Site
@@ -310,7 +342,7 @@ export default function Projects() {
                 <button
                   type="button"
                   data-media-index={index}
-                  data-cursor={hasClip ? 'Play Demo' : 'View Source'}
+                  data-cursor={hasClip ? 'Play demo' : 'View on GitHub'}
                   onClick={() => {
                     if (hasClip) setLightbox({ src: clip, title: project.title });
                     else window.open(project.github, '_blank', 'noopener,noreferrer');
@@ -328,7 +360,6 @@ export default function Projects() {
                           <video
                             src={clip}
                             poster={poster || undefined}
-                            autoPlay
                             muted
                             loop
                             playsInline
@@ -345,7 +376,6 @@ export default function Projects() {
                           <video
                             src={clip}
                             poster={poster || undefined}
-                            autoPlay
                             muted
                             loop
                             playsInline
@@ -362,7 +392,6 @@ export default function Projects() {
                         <video
                           src={clip}
                           poster={poster || undefined}
-                          autoPlay
                           muted
                           loop
                           playsInline
@@ -420,7 +449,6 @@ export default function Projects() {
                 <button
                   type="button"
                   onClick={() => setLightbox(null)}
-                  data-cursor="Close"
                   aria-label="Close video"
                   className="rounded-full border border-white/15 bg-white/5 p-2 text-white/70 transition-all duration-300 hover:bg-white/15 hover:text-white active:scale-90"
                 >

@@ -1,12 +1,13 @@
 import { motion, AnimatePresence } from 'motion/react';
 import { Menu, X } from 'lucide-react';
-import { useState, useEffect, useRef, type MouseEvent as ReactMouseEvent } from 'react';
+import { useState, useRef, type MouseEvent as ReactMouseEvent } from 'react';
 import { navigate } from '../utils/navigation';
+import { useActiveSection } from '../lib/active-section';
+
+const SPY_SECTIONS = ['hero', 'about', 'skills', 'experience', 'projects', 'contact'];
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
-  const [activeSection, setActiveSection] = useState<string | null>(null);
   const [logoEgg, setLogoEgg] = useState(false);
   const logoClicks = useRef<number[]>([]);
 
@@ -23,32 +24,10 @@ export default function Navbar() {
     navigate('/');
   };
 
-  useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 50);
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  /* Scroll-spy — highlights the section currently in view */
-  useEffect(() => {
-    const sections = ['about', 'skills', 'experience', 'projects', 'contact']
-      .map((id) => document.getElementById(id))
-      .filter((el): el is HTMLElement => Boolean(el));
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setActiveSection((entry.target as HTMLElement).id);
-          }
-        });
-      },
-      { rootMargin: '-40% 0px -55% 0px' },
-    );
-
-    sections.forEach((section) => observer.observe(section));
-    return () => observer.disconnect();
-  }, []);
+  /* Scroll-spy — same logic as the minimap, so both highlight the same section.
+     The hero has no nav link, so nothing is highlighted while it is in view. */
+  const spied = useActiveSection(SPY_SECTIONS);
+  const activeSection = spied && spied !== 'hero' ? spied : null;
 
   const navLinks = [
     { name: 'About', path: '/about', id: 'about' },
@@ -72,7 +51,6 @@ export default function Navbar() {
       <div className="glass-pill rounded-full px-6 py-3 flex items-center justify-between gap-8 md:gap-12 pointer-events-auto w-full max-w-fit">
         <a
           href="/"
-          data-cursor="Top"
           onClick={onLogoClick}
           className="text-xl font-display font-bold tracking-tighter"
         >
@@ -97,7 +75,6 @@ export default function Navbar() {
           ))}
           <a
             href="/contact"
-            data-cursor="Say Hello"
             onClick={(e) => {
               e.preventDefault();
               navigate('/contact', 'contact');
@@ -108,7 +85,6 @@ export default function Navbar() {
           </a>
           <a
             href="/resume"
-            data-cursor="Open Resume"
             onClick={(e) => {
               e.preventDefault();
               navigate('/resume');
@@ -122,7 +98,6 @@ export default function Navbar() {
         {/* Mobile Toggle */}
         <button
           aria-label="Toggle mobile menu"
-          data-cursor="Menu"
           className="md:hidden text-white/80"
           onClick={() => setIsOpen(!isOpen)}
         >

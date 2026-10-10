@@ -1,39 +1,44 @@
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import type Lenis from 'lenis';
 
-export const navigate = (path: string, sectionId?: string) => {
+/** The app-wide Lenis instance (set in App), if smooth scrolling is running. */
+export const getLenis = () => (window as unknown as { lenis?: Lenis }).lenis;
+
+const prefersReducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* One easing for every programmatic scroll so jumps feel like the wheel scroll */
+const SCROLL_DURATION = 1.1;
+const easeOutExpo = (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t));
+
+/**
+ * Scrolls to a section (by id) or to the top (`0`). Uses Lenis when it is
+ * running; otherwise falls back to native scrolling, instant for users who
+ * prefer reduced motion. Honors each section's `scroll-margin-top`.
+ */
+export const scrollToTarget = (target: string | 0) => {
+  const lenis = getLenis();
+  const el = target === 0 ? null : document.getElementById(target);
+  if (target !== 0 && !el) return;
+
+  if (lenis) {
+    lenis.scrollTo(el ?? 0, { duration: SCROLL_DURATION, easing: easeOutExpo });
+    return;
+  }
+
+  const behavior: ScrollBehavior = prefersReducedMotion() ? 'auto' : 'smooth';
+  if (el) el.scrollIntoView({ behavior });
+  else window.scrollTo({ top: 0, behavior });
+};
+
+interface NavigateOptions {
+  /** Set false when only the URL should change, e.g. closing an overlay. */
+  scroll?: boolean;
+}
+
+export const navigate = (path: string, sectionId?: string, { scroll = true }: NavigateOptions = {}) => {
   window.history.pushState({}, '', path);
   window.dispatchEvent(new Event('popstate'));
 
-  const lenis = (window as any).lenis;
-
-  if (sectionId) {
-    // Dynamically find the ScrollTrigger associated with this section's DOM element
-    // This avoids React Strict Mode ID collisions
-    const st = ScrollTrigger.getAll().find(t => t.trigger?.id === sectionId);
-    
-    if (st) {
-      if (lenis) {
-        // Force Lenis to instantly jump to the exact element
-        lenis.scrollTo(st.trigger, { immediate: true });
-      } else {
-        st.trigger?.scrollIntoView({ behavior: 'auto' });
-      }
-    } else {
-      const el = document.getElementById(sectionId);
-      if (el) {
-        if (lenis) {
-          // Force Lenis to instantly jump past the section
-          lenis.scrollTo(el, { immediate: true });
-        } else {
-          el.scrollIntoView({ behavior: 'auto' });
-        }
-      }
-    }
-  } else if (path === '/') {
-    if (lenis) {
-      lenis.scrollTo(0, { immediate: true });
-    } else {
-      window.scrollTo({ top: 0, behavior: 'auto' });
-    }
-  }
+  if (!scroll) return;
+  if (sectionId) scrollToTarget(sectionId);
+  else if (path === '/') scrollToTarget(0);
 };

@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import portfolioData from '../data/portfolio.json';
-import { GraduationCap, Award, ExternalLink } from 'lucide-react';
+import { ExternalLink } from 'lucide-react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -11,36 +11,40 @@ export default function About() {
   const container = useRef<HTMLElement>(null);
 
   useGSAP(() => {
-    // Header text animation
-    gsap.fromTo(".about-header", 
-      { y: 40, opacity: 0 },
-      {
-        scrollTrigger: {
-          trigger: container.current,
-          start: "top 85%",
-        },
-        y: 0,
-        opacity: 1,
-        duration: 0.8,
-        ease: "power3.out"
-      }
-    );
+    // Reveal only when motion is welcome; otherwise the cards are simply there
+    const mm = gsap.matchMedia();
+    mm.add('(prefers-reduced-motion: no-preference)', () => {
+      // Header text animation
+      gsap.fromTo(".about-header", 
+        { y: 40, opacity: 0 },
+        {
+          scrollTrigger: {
+            trigger: container.current,
+            start: "top 85%",
+          },
+          y: 0,
+          opacity: 1,
+          duration: 0.8,
+          ease: "power3.out"
+        }
+      );
 
-    // Cards animation
-    gsap.fromTo(".about-card",
-      { y: 40, opacity: 0 },
-      {
-        scrollTrigger: {
-          trigger: ".about-grid",
-          start: "top 85%",
-        },
-        y: 0,
-        opacity: 1,
-        duration: 0.8,
-        stagger: 0.2,
-        ease: "power3.out"
-      }
-    );
+      // Cards animation
+      gsap.fromTo(".about-card",
+        { y: 40, opacity: 0 },
+        {
+          scrollTrigger: {
+            trigger: ".about-grid",
+            start: "top 85%",
+          },
+          y: 0,
+          opacity: 1,
+          duration: 0.8,
+          stagger: 0.2,
+          ease: "power3.out"
+        }
+      );
+    });
   }, { scope: container });
 
   return (
@@ -80,7 +84,6 @@ export default function About() {
               <a 
                 key={i} 
                 href={cert.link !== "#" ? cert.link : undefined}
-                data-cursor="Verify"
                 target={cert.link !== "#" ? "_blank" : undefined}
                 rel="noreferrer"
                 className={`flex items-center justify-between p-4 bg-white/[0.02] border border-white/10 rounded-2xl transition-all duration-300 ${cert.link !== "#" ? 'cursor-pointer hover:bg-white/[0.06] hover:-translate-y-0.5' : 'cursor-default'}`}

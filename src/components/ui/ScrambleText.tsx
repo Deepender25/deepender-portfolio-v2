@@ -10,14 +10,15 @@ interface ScrambleTextProps {
 const CHARS = 'abcdefghijklmnopqrstuvwxyz+-_~|/\\';
 
 export function ScrambleText({ text, delay = 0, className = "" }: ScrambleTextProps) {
-  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+  // Mobile and reduced-motion visitors see the final text immediately
+  const isStatic =
+    typeof window !== 'undefined' &&
+    (window.innerWidth < 768 || window.matchMedia('(prefers-reduced-motion: reduce)').matches);
 
-  // On mobile, display full text immediately without blank initial state
-  const [displayText, setDisplayText] = useState(isMobile ? text : text.replace(/./g, ' '));
+  const [displayText, setDisplayText] = useState(isStatic ? text : text.replace(/./g, ' '));
 
   useEffect(() => {
-    // Mobile view: no scramble animation at all
-    if (isMobile) {
+    if (isStatic) {
       setDisplayText(text);
       return;
     }
@@ -62,7 +63,7 @@ export function ScrambleText({ text, delay = 0, className = "" }: ScrambleTextPr
     return () => {
       cancelAnimationFrame(rafId);
     };
-  }, [text, delay, isMobile]);
+  }, [text, delay, isStatic]);
 
   return (
     <span className="relative inline-block">

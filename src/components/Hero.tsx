@@ -7,6 +7,7 @@ import { ArrowRight } from 'lucide-react';
 import { ScrambleText } from './ui/ScrambleText';
 import { Magnetic } from './ui/Magnetic';
 import { SocialPreviewDock } from './ui/SocialPreviewDock';
+import { navigate } from '../utils/navigation';
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 
@@ -15,63 +16,48 @@ export default function Hero() {
 
   /* ── Entrance animation ───────────────────────────────────────────────── */
   useGSAP(() => {
-    const tl = gsap.timeline();
+    // Reduced-motion visitors get the content as-is: no hidden start state, no tweens
+    const mm = gsap.matchMedia();
+    mm.add('(prefers-reduced-motion: no-preference)', () => {
+      const tl = gsap.timeline();
 
-    // Reset initial states for elements to prevent FOUC
-    gsap.set('.hero-badge', { autoAlpha: 0, y: 30 });
-    gsap.set('.hero-title-1', { autoAlpha: 0, y: 30 });
-    gsap.set('.hero-title-2', { autoAlpha: 0, y: 30 });
-    gsap.set('.hero-buttons', { autoAlpha: 0, x: -20 });
-    gsap.set('.hero-panel', { autoAlpha: 0, y: 30 });
+      // Reset initial states for elements to prevent FOUC
+      gsap.set('.hero-title-1', { autoAlpha: 0, y: 30 });
+      gsap.set('.hero-title-2', { autoAlpha: 0, y: 30 });
+      gsap.set('.hero-buttons', { autoAlpha: 0, x: -20 });
+      gsap.set('.hero-panel', { autoAlpha: 0, y: 30 });
 
-    tl.to('.hero-badge', {
-      autoAlpha: 1,
-      y: 0,
-      duration: 1,
-      ease: 'power4.out',
-    })
-      .to('.hero-title-1', {
+      tl.to('.hero-title-1', {
         autoAlpha: 1,
         y: 0,
         duration: 1.2,
         ease: 'power4.out',
-      }, '-=0.8')
-      .to('.hero-title-2', {
-        autoAlpha: 1,
-        y: 0,
-        duration: 1.2,
-        ease: 'power4.out',
-      }, '-=1.0')
-      .to('.hero-buttons', {
-        autoAlpha: 1,
-        x: 0,
-        duration: 1,
-        ease: 'power4.out',
-      }, '-=0.9')
-      .to('.hero-panel', {
-        autoAlpha: 1,
-        y: 0,
-        duration: 1.2,
-        ease: 'power4.out',
-      }, '-=0.8');
-
-    // Gentle idle float on the badge (like clouds drifting in the reference scene)
-    // Starts after the entrance completes, loops forever
-    tl.to('.hero-badge', {
-      y: -6,
-      duration: 2.5,
-      ease: 'sine.inOut',
-      repeat: -1,
-      yoyo: true,
-    }, '+=0.2');
-
+      })
+        .to('.hero-title-2', {
+          autoAlpha: 1,
+          y: 0,
+          duration: 1.2,
+          ease: 'power4.out',
+        }, '-=1.0')
+        .to('.hero-buttons', {
+          autoAlpha: 1,
+          x: 0,
+          duration: 1,
+          ease: 'power4.out',
+        }, '-=0.9')
+        .to('.hero-panel', {
+          autoAlpha: 1,
+          y: 0,
+          duration: 1.2,
+          ease: 'power4.out',
+        }, '-=0.8');
+    });
   }, { scope: container });
 
   /* ── Scroll-driven parallax (mirrors the mountain-layer reference) ──────
    *  All tweens at position 0 in the timeline — they all start together as
    *  the user scrolls. Different y displacements create the depth illusion:
-   *    badge (background)  → slow
-   *    titles              → medium
+   *    titles (background) → slow / medium
    *    panel (foreground)  → fast + scale + fade
    *
    *  immediateRender: false is required on the fromVars so the start values
@@ -82,7 +68,7 @@ export default function Hero() {
     let mm = gsap.matchMedia();
 
     // Only apply heavy parallax on tablet/desktop to avoid mobile lag
-    mm.add('(min-width: 768px)', () => {
+    mm.add('(min-width: 768px) and (prefers-reduced-motion: no-preference)', () => {
       const tl = gsap.timeline({
         scrollTrigger: {
           trigger: container.current,
@@ -92,35 +78,28 @@ export default function Hero() {
         },
       });
 
-      // ── Layer 1 — Badge (furthest back, slowest) ──────────────────────────
-      tl.fromTo('.hero-badge-wrapper',
-        { y: 0, autoAlpha: 1, scale: 1, immediateRender: false },
-        { y: -45, autoAlpha: 0.15, scale: 0.92, ease: 'none', force3D: true },
-        0
-      );
-
-      // ── Layer 2 — Name line 1 "Deepender" (mid-ground) ───────────────────
+      // ── Layer 1 — Name line 1 "Deepender" (mid-ground) ───────────────────
       tl.fromTo('.hero-title-1-wrapper',
         { y: 0, xPercent: 0, immediateRender: false },
         { y: -85, xPercent: -1.5, ease: 'none', force3D: true },
         0
       );
 
-      // ── Layer 3 — Name line 2 "Yadav." (slightly faster, drifts right) ───
+      // ── Layer 2 — Name line 2 "Yadav." (slightly faster, drifts right) ───
       tl.fromTo('.hero-title-2-wrapper',
         { y: 0, xPercent: 0, immediateRender: false },
         { y: -120, xPercent: 1.5, ease: 'none', force3D: true },
         0
       );
 
-      // ── Layer 4 — Buttons (mid-foreground, fades out quickly) ─────────────
+      // ── Layer 3 — Buttons (mid-foreground, fades out quickly) ─────────────
       tl.fromTo('.hero-buttons-wrapper',
         { y: 0, autoAlpha: 1, immediateRender: false },
         { y: -75, autoAlpha: 0, ease: 'none', force3D: true },
         0
       );
 
-      // ── Layer 5 — Glass panel (foreground, fastest + shrinks away) ────────
+      // ── Layer 4 — Glass panel (foreground, fastest + shrinks away) ────────
       tl.fromTo('.hero-panel-wrapper',
         { y: 0, autoAlpha: 1, scale: 1, immediateRender: false },
         { y: -210, autoAlpha: 0, scale: 0.95, ease: 'none', force3D: true },
@@ -139,64 +118,55 @@ export default function Hero() {
 
           {/* Left Side */}
           <div>
-            <div className="hero-badge-wrapper will-change-transform">
-              <div className="hero-badge inline-flex items-center gap-3 glass-pill px-4 py-2 rounded-full mb-8 will-change-transform">
-                <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-                <p className="font-mono text-xs text-white/80 uppercase tracking-widest">
-                  {portfolioData.hero.badgeText}
-                </p>
-              </div>
+            <div className="hero-title-1-wrapper will-change-transform">
+              <h1 className="hero-title-1 text-5xl md:text-7xl lg:text-[7rem] font-display font-medium tracking-tighter leading-[1.05] will-change-transform">
+                <ScrambleText text={portfolioData.hero.titleLine1} delay={300} className="text-gradient" />
+              </h1>
             </div>
-
-            <div>
-              <div className="hero-title-1-wrapper will-change-transform">
-                <h1 className="hero-title-1 text-5xl md:text-7xl lg:text-[7rem] font-display font-medium tracking-tighter leading-[1.05] will-change-transform">
-                  <ScrambleText text={portfolioData.hero.titleLine1} delay={300} className="text-gradient" />
-                </h1>
+            <div className="flex flex-col md:flex-row md:items-center gap-6 md:gap-8 mt-2">
+              <div className="hero-title-2-wrapper will-change-transform">
+                <span className="block hero-title-2 text-5xl md:text-7xl lg:text-[7rem] font-display font-medium tracking-tighter leading-[1.05] italic font-light text-white/60 will-change-transform">
+                  <ScrambleText text={portfolioData.hero.titleLine2} delay={1500} />
+                </span>
               </div>
-              <div className="flex flex-col md:flex-row md:items-center gap-6 md:gap-8 mt-2">
-                <div className="hero-title-2-wrapper will-change-transform">
-                  <span className="block hero-title-2 text-5xl md:text-7xl lg:text-[7rem] font-display font-medium tracking-tighter leading-[1.05] italic font-light text-white/60 will-change-transform">
-                    <ScrambleText text={portfolioData.hero.titleLine2} delay={1500} />
-                  </span>
-                </div>
 
-                <div className="hero-buttons-wrapper will-change-transform">
-                  <div className="hero-buttons flex flex-wrap items-center gap-4 mt-4 md:mt-0 will-change-transform">
-                    <Magnetic>
-                      <a
-                        href="#projects"
-                        data-cursor="Explore"
-                        className="group flex items-center gap-3 bg-white text-black px-6 py-3 md:px-8 md:py-4 rounded-full text-sm md:text-base font-medium hover:bg-white/90 transition-all hover:scale-105 active:scale-95 tracking-normal font-sans"
-                      >
-                        View Projects
-                        <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
-                      </a>
-                    </Magnetic>
-                    <SocialPreviewDock
-                      email={portfolioData.contact.email}
-                      profile={{
-                        username: "Deepender25",
-                        name: "Deepender Yadav",
-                        headline: "AI/ML Engineer & Full-Stack Developer",
-                        subheadline: "B.Tech CSE (AI/ML) @ Gurugram University",
-                        location: "Gurugram, India",
-                        bio: portfolioData.hero.description1,
-                        avatarUrl: "/Deepender.jpg",
-                        status: portfolioData.hero.badgeText,
-                        links: {
-                          github: portfolioData.hero.social.github,
-                          linkedin: portfolioData.hero.social.linkedin,
-                          email: portfolioData.hero.social.email,
-                        },
+              <div className="hero-buttons-wrapper will-change-transform">
+                <div className="hero-buttons flex flex-wrap items-center gap-4 mt-4 md:mt-0 will-change-transform">
+                  <Magnetic>
+                    <a
+                      href="/projects"
+                      onClick={(event) => {
+                        event.preventDefault();
+                        navigate('/projects', 'projects');
                       }}
-                      bannerColors={{
-                        linkedin: ["#0a66c2", "#004182", "#032147"],
-                        github: ["#27272a", "#18181b", "#09090b"],
-                        email: ["#064e3b", "#022c22", "#09090b"],
-                      }}
-                    />
-                  </div>
+                      className="group flex items-center gap-3 bg-white text-black px-6 py-3 md:px-8 md:py-4 rounded-full text-sm md:text-base font-medium hover:bg-white/90 transition-all hover:scale-105 active:scale-95 tracking-normal font-sans"
+                    >
+                      View Projects
+                      <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                    </a>
+                  </Magnetic>
+                  <SocialPreviewDock
+                    email={portfolioData.contact.email}
+                    profile={{
+                      username: "Deepender25",
+                      name: "Deepender Yadav",
+                      headline: "AI/ML Engineer & Full-Stack Developer",
+                      subheadline: "B.Tech CSE (AI/ML) @ Gurugram University",
+                      location: "Gurugram, India",
+                      bio: portfolioData.hero.description1,
+                      avatarUrl: "/Deepender.jpg",
+                      links: {
+                        github: portfolioData.hero.social.github,
+                        linkedin: portfolioData.hero.social.linkedin,
+                        email: portfolioData.hero.social.email,
+                      },
+                    }}
+                    bannerColors={{
+                      linkedin: ["#0a66c2", "#004182", "#032147"],
+                      github: ["#27272a", "#18181b", "#09090b"],
+                      email: ["#064e3b", "#022c22", "#09090b"],
+                    }}
+                  />
                 </div>
               </div>
             </div>

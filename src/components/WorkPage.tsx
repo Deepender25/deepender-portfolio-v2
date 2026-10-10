@@ -1,8 +1,10 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { motion } from 'motion/react';
 import { ArrowLeft, ArrowRight, ExternalLink, Github, Store } from 'lucide-react';
 import portfolioData from '../data/portfolio.json';
 import { navigate } from '../utils/navigation';
 import { useFocusTrap } from '../lib/focus-trap';
+import { useScrollLock } from '../lib/scroll-lock';
 
 const pad = (value: number) => String(value).padStart(2, '0');
 const slugify = (title: string) => title.toLowerCase().replace(/\s+/g, '-');
@@ -27,17 +29,18 @@ export default function WorkPage({ slug, onClose }: WorkPageProps) {
   const trapRef = useFocusTrap<HTMLDivElement>(Boolean(project));
 
   /* Lock the page behind the overlay + close on Escape */
+  useScrollLock(true);
   useEffect(() => {
-    document.body.style.overflow = 'hidden';
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') onClose();
     };
     window.addEventListener('keydown', onKeyDown);
-    return () => {
-      document.body.style.overflow = '';
-      window.removeEventListener('keydown', onKeyDown);
-    };
+    return () => window.removeEventListener('keydown', onKeyDown);
   }, [onClose]);
+
+  /* Vertical footage is letterboxed instead of cropped — detected from the clip itself.
+     Stored as the clip URL so a stale result can never apply to another project. */
+  const [portraitClip, setPortraitClip] = useState<string | null>(null);
 
   /* Reset inner scroll when hopping between case studies */
   const mainRef = useRef<HTMLElement>(null);
@@ -56,9 +59,13 @@ export default function WorkPage({ slug, onClose }: WorkPageProps) {
     : null;
 
   return (
-    <div
+    <motion.div
       ref={trapRef}
       data-lenis-prevent
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
       className="fixed inset-0 z-[90] flex h-[100dvh] flex-col bg-[#030303] text-white"
     >
       {/* ── Top bar ─────────────────────────────────────────────────── */}
@@ -67,7 +74,6 @@ export default function WorkPage({ slug, onClose }: WorkPageProps) {
           <button
             type="button"
             onClick={onClose}
-            data-cursor="Back"
             className="flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-2 font-mono text-[11px] uppercase tracking-widest text-white/70 transition-all duration-300 hover:bg-white hover:text-black active:scale-95"
           >
             <ArrowLeft size={13} />
@@ -96,7 +102,7 @@ export default function WorkPage({ slug, onClose }: WorkPageProps) {
 
             <div className="mt-7 flex flex-wrap items-center gap-3">
               {project.github !== '#' && (
-                <a href={project.github} target="_blank" rel="noreferrer" data-cursor="GitHub" className={ghostPill}>
+                <a href={project.github} target="_blank" rel="noreferrer" className={ghostPill}>
                   <Github size={14} />
                   Source Code
                 </a>
@@ -106,7 +112,6 @@ export default function WorkPage({ slug, onClose }: WorkPageProps) {
                   href={project.live}
                   target="_blank"
                   rel="noreferrer"
-                  data-cursor="Visit Site"
                   className="flex items-center gap-2 rounded-full bg-white px-4 py-2 text-xs font-medium text-black transition-all duration-300 hover:bg-white/90 active:scale-95"
                 >
                   Live Site
@@ -114,7 +119,7 @@ export default function WorkPage({ slug, onClose }: WorkPageProps) {
                 </a>
               )}
               {project.msStore && project.msStore !== '#' && (
-                <a href={project.msStore} target="_blank" rel="noreferrer" data-cursor="Microsoft Store" className={ghostPill}>
+                <a href={project.msStore} target="_blank" rel="noreferrer" className={ghostPill}>
                   <Store size={14} />
                   Microsoft Store
                 </a>
@@ -134,10 +139,12 @@ export default function WorkPage({ slug, onClose }: WorkPageProps) {
                   muted
                   loop
                   playsInline
+                  onLoadedMetadata={(event) => {
+                    const el = event.currentTarget;
+                    setPortraitClip(el.videoHeight > el.videoWidth ? project.clip ?? null : null);
+                  }}
                   className={`absolute inset-0 h-full w-full ${
-                    index === projects.findIndex((p) => p.title === 'Buddy')
-                      ? 'object-contain'
-                      : 'object-cover'
+                    portraitClip === project.clip ? 'object-contain' : 'object-cover'
                   }`}
                 />
               ) : cover ? (
@@ -181,7 +188,6 @@ export default function WorkPage({ slug, onClose }: WorkPageProps) {
           <button
             type="button"
             onClick={() => navigate(`/work/${slugify(prev.title)}`)}
-            data-cursor="Previous Project"
             className="group flex items-center gap-3 py-4 pr-4 text-left"
           >
             <ArrowLeft size={15} className="shrink-0 text-white/35 transition-all duration-300 group-hover:-translate-x-0.5 group-hover:text-white" />
@@ -197,7 +203,6 @@ export default function WorkPage({ slug, onClose }: WorkPageProps) {
           <button
             type="button"
             onClick={() => navigate(`/work/${slugify(next.title)}`)}
-            data-cursor="Next Project"
             className="group flex items-center justify-end gap-3 py-4 pl-4 text-right"
           >
             <span className="min-w-0">
@@ -212,6 +217,6 @@ export default function WorkPage({ slug, onClose }: WorkPageProps) {
           </button>
         </div>
       </footer>
-    </div>
+    </motion.div>
   );
 }

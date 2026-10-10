@@ -41,7 +41,6 @@ const useIsoLayoutEffect =
 
 const EASE_OUT = [0.22, 1, 0.36, 1] as const;
 const SPRING = { type: 'spring', bounce: 0.2, duration: 0.62 } as const;
-const HEADER_SPRING = { ...SPRING, bounce: 0.45 } as const;
 const ROW_SPRING = { ...SPRING, bounce: 0.26, delay: 0.08 } as const;
 const ROW_OFFSET = 16;
 const CELL_FADE = { duration: 0.2, ease: EASE_OUT } as const;
@@ -195,26 +194,51 @@ async function fetchRepos(login: string): Promise<RepoContribution[]> {
   }
 }
 
+type GitHubUserData = {
+  contributions: Contribution[];
+  repos: RepoContribution[];
+  allTimeTotal: number;
+};
+
+/* One request set per login per page load. The card remounts on every hover,
+   and unauthenticated GitHub API calls are capped at 60/hour per IP. */
+const userCache = new Map<string, Promise<GitHubUserData | null>>();
+/* Settled results, read synchronously so a reopened card renders real data on its first frame */
+const resolvedUsers = new Map<string, GitHubUserData>();
+
+function loadGitHubUser(login: string) {
+  let pending = userCache.get(login);
+  if (!pending) {
+    pending = Promise.all([fetchCalendar(login), fetchRepos(login)]).then(
+      ([calendarResult, repos]) =>
+        calendarResult
+          ? { contributions: calendarResult.contributions, repos, allTimeTotal: calendarResult.allTimeTotal }
+          : null,
+    );
+    // A failed load may be retried on the next open
+    pending
+      .then((result) => {
+        if (result) resolvedUsers.set(login, result);
+        else userCache.delete(login);
+      })
+      .catch(() => userCache.delete(login));
+    userCache.set(login, pending);
+  }
+  return pending;
+}
+
 function useGitHubUser(login?: string) {
-  const [data, setData] = React.useState<{
-    contributions: Contribution[];
-    repos: RepoContribution[];
-    allTimeTotal: number;
-  }>();
+  const [data, setData] = React.useState<GitHubUserData | undefined>(() =>
+    login ? resolvedUsers.get(login) : undefined,
+  );
 
   React.useEffect(() => {
     if (!login) return;
     let active = true;
 
-    Promise.all([fetchCalendar(login), fetchRepos(login)])
-      .then(([calendarResult, repos]) => {
-        if (active && calendarResult) {
-          setData({
-            contributions: calendarResult.contributions,
-            repos,
-            allTimeTotal: calendarResult.allTimeTotal,
-          });
-        }
+    loadGitHubUser(login)
+      .then((result) => {
+        if (active && result) setData(result);
       })
       .catch(() => {});
 
@@ -414,23 +438,21 @@ const ContributionGrid = ({
         {visible.map((week, weekIndex) => (
           <div key={weekIndex} className="flex flex-col" style={{ gap }}>
             {week.map((day) => (
-              <motion.div
+              <div
                 key={day.date}
                 onPointerEnter={hover(day)}
-                className="shrink-0 rounded-[2px] bg-white/[0.06] border border-white/[0.02]"
-                style={{ width: cellSize, height: cellSize }}
-                initial={reduceMotion ? false : { opacity: 0, scale: 0.4 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{
-                  ...CELL_FADE,
-                  delay: reduceMotion ? 0 : weekIndex * COLUMN_STAGGER,
+                className="gh-cell shrink-0 rounded-[2px] bg-white/[0.06] border border-white/[0.02]"
+                style={{
+                  width: cellSize,
+                  height: cellSize,
+                  animationDelay: `${weekIndex * COLUMN_STAGGER}s`,
                 }}
               >
                 <div
                   className="h-full w-full rounded-[2px]"
                   style={scale[day.level] ?? scale[0]}
                 />
-              </motion.div>
+              </div>
             ))}
           </div>
         ))}
@@ -593,7 +615,6 @@ export const GitHubActivity = ({
 
   const scale = React.useMemo(() => toScale(accent), [accent]);
   const transition = reduceMotion ? { duration: 0 } : SPRING;
-  const headerTransition = reduceMotion ? { duration: 0 } : HEADER_SPRING;
   const rowTransition = reduceMotion ? { duration: 0 } : ROW_SPRING;
 
   const kick = reduceMotion ? {} : { x: ROW_OFFSET, y: ROW_OFFSET };
@@ -674,7 +695,6 @@ export const GitHubActivity = ({
           href={`https://github.com/${username}`}
           target="_blank"
           rel="noreferrer"
-          data-cursor="GitHub"
           className="group flex items-center gap-2 hover:opacity-100 transition-opacity"
         >
           <div className="p-1 rounded-md bg-white/5 border border-white/10 text-white/70 group-hover:text-white transition-colors">
@@ -699,7 +719,6 @@ export const GitHubActivity = ({
               onClick={toggle}
               aria-expanded={open}
               title={open ? 'Hide top repos' : 'Show top repos'}
-              data-cursor={open ? 'Hide' : 'Top Repos'}
               className="p-1 rounded-full bg-white/5 hover:bg-white/15 border border-white/10 text-white/70 transition-colors"
             >
               <Chevron open={open} transition={transition} />
@@ -710,7 +729,6 @@ export const GitHubActivity = ({
             href={`https://github.com/${username}`}
             target="_blank"
             rel="noreferrer"
-            data-cursor="Profile"
             className="relative block rounded-full ring-1 ring-white/20 hover:ring-emerald-400/60 transition-all hover:scale-105"
           >
             <img

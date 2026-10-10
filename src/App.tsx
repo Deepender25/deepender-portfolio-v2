@@ -3,12 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useEffect, useRef, lazy, Suspense } from 'react';
+import { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react';
+import { AnimatePresence, MotionConfig } from 'motion/react';
 import Lenis from 'lenis';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 gsap.registerPlugin(ScrollTrigger);
-import { navigate } from './utils/navigation';
+import { navigate, scrollToTarget } from './utils/navigation';
 import portfolioData from './data/portfolio.json';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
@@ -125,17 +126,18 @@ export default function App() {
     const path = window.location.pathname;
     const sectionId = path.substring(1);
     if (['about', 'skills', 'experience', 'projects', 'contact'].includes(sectionId)) {
-      setTimeout(() => {
-        document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth' });
-      }, 500);
+      setTimeout(() => scrollToTarget(sectionId), 500);
     }
 
     window.addEventListener('popstate', handleLocationChange);
     return () => window.removeEventListener('popstate', handleLocationChange);
   }, []);
 
-  // Initialize Lenis for smooth scrolling and sync with GSAP
+  // Initialize Lenis for smooth scrolling and sync with GSAP.
+  // Skipped for reduced-motion users — they get native, instant scrolling.
   useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
     const lenis = new Lenis({
       duration: 0.7, // Reduced from 1.2 for snappier, less "floaty/laggy" feeling
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
@@ -145,87 +147,96 @@ export default function App() {
 
     lenis.on('scroll', ScrollTrigger.update);
 
-    gsap.ticker.add((time) => {
+    // Keep a stable reference so cleanup removes the exact same callback
+    const tick = (time: number) => {
       lenis.raf(time * 1000);
-    });
+    };
+    gsap.ticker.add(tick);
 
     gsap.ticker.lagSmoothing(0);
 
     return () => {
-      gsap.ticker.remove((time) => lenis.raf(time * 1000));
+      gsap.ticker.remove(tick);
+      lenis.off('scroll', ScrollTrigger.update);
       lenis.destroy();
+      if ((window as any).lenis === lenis) delete (window as any).lenis;
     };
   }, []);
 
-  const closeResume = () => {
+  // Closing an overlay only restores the URL — the page stays where the visitor left it
+  const closeResume = useCallback(() => {
     setIsResumeOpen(false);
-    navigate('/');
-  };
+    navigate('/', undefined, { scroll: false });
+  }, []);
+
+  const closeWork = useCallback(() => navigate('/', undefined, { scroll: false }), []);
 
   return (
-    <div className="relative min-h-screen text-white font-sans selection:bg-white/20 selection:text-white overflow-x-hidden">
-      <CursorLabel />
-      <ScrollProgress />
-      <Suspense fallback={null}>
-        <ResumeModal isOpen={isResumeOpen} onClose={closeResume} />
-      </Suspense>
+    <MotionConfig reducedMotion="user">
+      <div className="relative min-h-screen text-white font-sans selection:bg-white/20 selection:text-white overflow-x-hidden">
+        <CursorLabel />
+        <ScrollProgress />
+        <Suspense fallback={null}>
+          <ResumeModal isOpen={isResumeOpen} onClose={closeResume} />
+        </Suspense>
 
-      {workProject && (
-        <WorkPage slug={workSlug!} onClose={() => navigate('/')} />
-      )}
+        <AnimatePresence>
+          {workProject && <WorkPage slug={workSlug!} onClose={closeWork} />}
+        </AnimatePresence>
 
-      <HangingIdCard />
+        <HangingIdCard />
 
-      {/* Left Minimap Proximity Sidebar */}
-      <ProximitySidebar
-        sections={portfolioSections}
-        side="left"
-        className="fixed left-3 xl:left-6 top-1/2 -translate-y-1/2 z-40 hidden lg:flex pointer-events-auto"
-      />
+        {/* Left Minimap Proximity Sidebar */}
+        <ProximitySidebar
+          sections={portfolioSections}
+          side="left"
+          className="fixed left-3 xl:left-6 top-1/2 -translate-y-1/2 z-40 hidden lg:flex pointer-events-auto"
+        />
 
-      {/* Top Edge Hard-to-Soft Blur Gradient */}
-      <div 
-        className="fixed top-0 left-0 right-0 h-40 z-40 pointer-events-none backdrop-blur-2xl transform-gpu"
-        style={{
-          maskImage: 'linear-gradient(to bottom, black 0%, black 20%, transparent 100%)',
-          WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 20%, transparent 100%)'
-        }}
-      />
+        {/* Top Edge Hard-to-Soft Blur Gradient */}
+        <div 
+          className="fixed top-0 left-0 right-0 h-40 z-40 pointer-events-none backdrop-blur-2xl transform-gpu"
+          style={{
+            maskImage: 'linear-gradient(to bottom, black 0%, black 20%, transparent 100%)',
+            WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 20%, transparent 100%)'
+          }}
+        />
 
-      {/* Deep Liquid Orbs (Behind the shadow) */}
-      <div className="fixed inset-0 z-[-1] overflow-hidden pointer-events-none transform-gpu">
-        <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-white/15 blur-[60px] animate-blob" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40vw] h-[40vw] rounded-full bg-slate-200/15 blur-[60px] animate-blob animation-delay-2000" />
-        <div className="absolute top-[40%] left-[30%] w-[30vw] h-[30vw] rounded-full bg-gray-300/15 blur-[50px] animate-blob animation-delay-4000" />
-      </div>
+        {/* Deep Liquid Orbs (Behind the shadow) */}
+        <div className="fixed inset-0 z-[-1] overflow-hidden pointer-events-none transform-gpu">
+          <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-white/15 blur-[60px] animate-blob" />
+          <div className="absolute bottom-[-10%] right-[-10%] w-[40vw] h-[40vw] rounded-full bg-slate-200/15 blur-[60px] animate-blob animation-delay-2000" />
+          <div className="absolute top-[40%] left-[30%] w-[30vw] h-[30vw] rounded-full bg-gray-300/15 blur-[50px] animate-blob animation-delay-4000" />
+        </div>
 
-      {/* Dynamic Background Toggle */}
-      <div className="fixed inset-0 z-0 pointer-events-none transform-gpu transition-opacity duration-1000">
-        {activeBg === '1' ? (
-          <Waves className="h-full w-full" strokeColor="rgba(255, 255, 255, 0.3)" />
-        ) : (
-          <EtheralShadow
-            color="rgba(255, 255, 255, 0.15)"
-            animation={{ scale: 0, speed: 0 }}
-            noise={{ opacity: 0.8, scale: 1.2 }}
-            sizing="stretch"
-          />
-        )}
-      </div>
+        {/* Dynamic Background Toggle */}
+        <div className="fixed inset-0 z-0 pointer-events-none transform-gpu transition-opacity duration-1000">
+          {activeBg === '1' ? (
+            <Waves className="h-full w-full" strokeColor="rgba(255, 255, 255, 0.3)" />
+          ) : (
+            <EtheralShadow
+              color="rgba(255, 255, 255, 0.15)"
+              animation={{ scale: 0, speed: 0 }}
+              noise={{ opacity: 0.8, scale: 1.2 }}
+              sizing="stretch"
+            />
+          )}
+        </div>
       
 
 
-      <Navbar />
-      <main className="relative z-10 flex flex-col gap-16 md:gap-24">
-        <Hero />
-        <About />
-        <Skills />
-        <Experience />
-        <Projects />
-        <Testimonials />
-        <Contact />
-      </main>
-      <Footer />
-    </div>
+        <Navbar />
+        <main className="relative z-10 flex flex-col gap-16 md:gap-24">
+          <Hero />
+          <About />
+          <Skills />
+          <Experience />
+          <Projects />
+          <Testimonials />
+          <Contact />
+        </main>
+        <Footer />
+      </div>
+    </MotionConfig>
   );
 }

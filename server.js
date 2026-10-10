@@ -29,19 +29,31 @@ const escapeHtml = (value) =>
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
 
+// Pragmatic address check: one @, no whitespace/brackets, a dot in the domain
+const EMAIL_PATTERN = /^[^\s@<>()[\]\\,;:"]+@[^\s@<>()[\]\\,;:"]+\.[^\s@<>()[\]\\,;:"]+$/;
+
+// Non-strings (numbers, objects, arrays) count as missing instead of crashing the handler
+const field = (value) => (typeof value === 'string' ? value.trim() : '');
+
 // POST /api/contact
 app.post('/api/contact', async (req, res) => {
-  const { name, email, message } = req.body;
+  const name = field(req.body?.name);
+  const email = field(req.body?.email);
+  const message = field(req.body?.message);
 
   if (!name || !email || !message) {
     return res.status(400).json({ error: 'All fields are required.' });
   }
 
-  const safeName = escapeHtml(name.trim().slice(0, 120));
-  const safeEmail = escapeHtml(String(email).trim().slice(0, 200));
+  if (email.length > 200 || !EMAIL_PATTERN.test(email)) {
+    return res.status(400).json({ error: 'Please enter a valid email address.' });
+  }
+
+  const safeName = escapeHtml(name.slice(0, 120));
+  const safeEmail = escapeHtml(email);
   const safeMessage = escapeHtml(message.slice(0, 5000));
   // Subject is a plain-text header — strip control chars to block header injection
-  const safeSubjectName = String(name).trim().replace(/[\r\n\t]+/g, ' ').slice(0, 120);
+  const safeSubjectName = name.replace(/[\r\n\t]+/g, ' ').slice(0, 120);
 
   const transporter = nodemailer.createTransport({
     service: 'gmail',
@@ -91,6 +103,14 @@ app.post('/api/contact', async (req, res) => {
     console.error('Nodemailer error:', err);
     return res.status(500).json({ error: 'Failed to send email. Please try again.' });
   }
+});
+
+// Malformed JSON bodies get a JSON error (the client always parses JSON), not Express's HTML page
+app.use((err, req, res, next) => {
+  if (err?.type === 'entity.parse.failed' || err?.type === 'entity.too.large') {
+    return res.status(err.status || 400).json({ error: 'Invalid request body.' });
+  }
+  return next(err);
 });
 
 if (process.env.NODE_ENV !== 'production') {

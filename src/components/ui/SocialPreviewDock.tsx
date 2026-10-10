@@ -19,7 +19,6 @@ export interface SocialProfile {
   location: string;
   bio?: string;
   avatarUrl?: string;
-  status?: string;
   links: {
     github?: string;
     linkedin?: string;
@@ -52,6 +51,10 @@ export function SocialPreviewDock({
   const [activeTab, setActiveTab] = useState<ActiveTab>(null);
   const [copied, setCopied] = useState(false);
   const timeoutRef = useRef<number | null>(null);
+  const dockRef = useRef<HTMLDivElement>(null);
+  const iconRefs = useRef(new Map<Exclude<ActiveTab, null>, HTMLElement>());
+  /* Horizontal distance from the dock's centre to the active icon's centre */
+  const [arrowOffset, setArrowOffset] = useState(0);
 
   const cleanEmail = email.replace(/^mailto:/, '');
   const username = profile.username || 'Deepender25';
@@ -62,6 +65,11 @@ export function SocialPreviewDock({
     if (timeoutRef.current) {
       window.clearTimeout(timeoutRef.current);
       timeoutRef.current = null;
+    }
+    const dock = dockRef.current?.getBoundingClientRect();
+    const icon = tab ? iconRefs.current.get(tab)?.getBoundingClientRect() : undefined;
+    if (dock && icon) {
+      setArrowOffset(icon.left + icon.width / 2 - (dock.left + dock.width / 2));
     }
     setActiveTab(tab);
   };
@@ -118,27 +126,33 @@ export function SocialPreviewDock({
 
   return (
     <div
+      ref={dockRef}
       className={`relative inline-flex items-center ${className}`}
       onMouseLeave={handleMouseLeave}
     >
       {/* ── Popover Preview Card ─────────────────────────────────────── */}
       <AnimatePresence>
         {activeTab && (
+          /* One popover shell for all tabs: it opens/closes once, and only the
+             content cross-fades when moving between icons */
           <motion.div
-            key={activeTab}
-            initial={{ opacity: 0, y: 10, scale: 0.96 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 6, scale: 0.96 }}
-            transition={{
-              type: 'spring',
-              stiffness: 450,
-              damping: 30,
-              mass: 0.5,
-            }}
+            key="popover"
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 4 }}
+            transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
             onMouseEnter={() => handleMouseEnter(activeTab)}
             onMouseLeave={handleMouseLeave}
             className="absolute bottom-full mb-3.5 left-1/2 -translate-x-1/2 z-50 pointer-events-auto"
           >
+            <AnimatePresence mode="popLayout" initial={false}>
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.12 }}
+            >
             {/* ── 1. GITHUB CARD (Rich Activity Graph with Bottom Info) ── */}
             {activeTab === 'github' && (
               <div className="relative">
@@ -149,8 +163,6 @@ export function SocialPreviewDock({
                   months={10}
                   cellSize={8}
                 />
-                {/* Subtle arrow pointer */}
-                <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2.5 h-2.5 rotate-45 border-r border-b border-white/[0.12] bg-[#0c0c0e]" />
               </div>
             )}
 
@@ -161,7 +173,6 @@ export function SocialPreviewDock({
                   href={profile.links.linkedin || `https://www.linkedin.com/in/${username.toLowerCase()}/`}
                   target="_blank"
                   rel="noreferrer"
-                  data-cursor="LinkedIn"
                   className="block p-4 sm:p-5 w-[310px] sm:w-[340px] hover:bg-white/[0.02] transition-colors group cursor-pointer"
                 >
                   <div className="flex items-center gap-3 mb-3">
@@ -193,8 +204,6 @@ export function SocialPreviewDock({
                     </span>
                   </div>
                 </a>
-                {/* Subtle arrow pointer */}
-                <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2.5 h-2.5 rotate-45 border-r border-b border-white/[0.12] bg-[#0c0c0e]" />
               </div>
             )}
 
@@ -210,7 +219,6 @@ export function SocialPreviewDock({
                     <button
                       type="button"
                       onClick={copyEmail}
-                      data-cursor="Copy"
                       className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-white/5 border border-white/10 text-xs font-medium text-white/80 hover:bg-white hover:text-black transition-all active:scale-95"
                     >
                       {copied ? <Check size={13} className="text-emerald-400" /> : <Copy size={13} />}
@@ -218,7 +226,6 @@ export function SocialPreviewDock({
                     </button>
                     <a
                       href={`mailto:${cleanEmail}`}
-                      data-cursor="Send Mail"
                       className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-white text-black text-xs font-medium hover:bg-white/90 transition-all active:scale-95"
                     >
                       <Send size={12} />
@@ -226,10 +233,23 @@ export function SocialPreviewDock({
                     </a>
                   </div>
                 </div>
-                {/* Subtle arrow pointer */}
-                <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2.5 h-2.5 rotate-45 border-r border-b border-white/[0.12] bg-[#0c0c0e]" />
               </div>
             )}
+            </motion.div>
+            </AnimatePresence>
+
+            {/* Arrow tracks the hovered icon instead of the dock's centre.
+                The slide and the 45° turn live on separate elements so the
+                slide isn't applied along the rotated axis. */}
+            <motion.div
+              aria-hidden
+              initial={false}
+              animate={{ x: arrowOffset }}
+              transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+              className="absolute -bottom-1 left-1/2 -ml-[5px] w-2.5 h-2.5"
+            >
+              <div className="h-full w-full rotate-45 border-r border-b border-white/[0.12] bg-[#0c0c0e]" />
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -243,12 +263,15 @@ export function SocialPreviewDock({
           return (
             <div
               key={item.id}
+              ref={(node: HTMLDivElement | null) => {
+                if (node) iconRefs.current.set(item.id, node);
+                else iconRefs.current.delete(item.id);
+              }}
               className="relative"
               onMouseEnter={() => handleMouseEnter(item.id)}
             >
               <a
                 href={item.href}
-                data-cursor={item.label}
                 target={item.id === 'email' ? undefined : '_blank'}
                 rel={item.id === 'email' ? undefined : 'noreferrer'}
                 onFocus={() => handleMouseEnter(item.id)}

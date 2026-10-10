@@ -174,7 +174,7 @@ export function Waves({
 
     // Mouse handler
     const onMouseMove = (e: MouseEvent) => {
-        updateMousePosition(e.pageX, e.pageY)
+        updateMousePosition(e.clientX, e.clientY)
     }
 
     // Touch handler
@@ -189,8 +189,9 @@ export function Waves({
         if (!boundingRef.current) return
 
         const mouse = mouseRef.current
+        // Viewport coordinates: the canvas is fixed, so page scroll must not be added
         mouse.x = x - boundingRef.current.left
-        mouse.y = y - boundingRef.current.top + window.scrollY
+        mouse.y = y - boundingRef.current.top
 
         if (!mouse.set) {
             mouse.sx = mouse.x

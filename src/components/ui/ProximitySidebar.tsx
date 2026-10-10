@@ -11,12 +11,12 @@ import {
   AnimatePresence,
   motion,
   useMotionValue,
-  useReducedMotion,
   useSpring,
   useTransform,
   type MotionValue,
 } from 'motion/react';
 import { navigate } from '../../utils/navigation';
+import { findActiveSection } from '../../lib/active-section';
 
 export type Side = 'left' | 'right';
 export type SectionKind = 'title' | 'subtitle' | 'section' | 'body';
@@ -171,7 +171,6 @@ const Dash = ({
         type="button"
         aria-current={active ? 'location' : undefined}
         aria-label={`Go to ${section.label}`}
-        data-cursor={section.label}
         className="group relative flex h-4 w-[95px] items-center border-0 bg-transparent p-0 outline-none cursor-pointer"
         onClick={() => onSelect(section.id)}
         onMouseEnter={() => setIsHovered(true)}
@@ -219,7 +218,6 @@ export const ProximitySidebar = ({
   sections,
 }: ProximitySidebarProps) => {
   const mouseY = useMotionValue(Infinity);
-  const shouldReduceMotion = useReducedMotion();
   const dashRefs = useRef(new Map<string, HTMLButtonElement>());
   const pointerInside = useRef(false);
   const resetTimer = useRef<number | null>(null);
@@ -319,28 +317,12 @@ export const ProximitySidebar = ({
 
     let frame = 0;
 
+    const ids = sections.map((section) => section.id);
+
     const updateActiveSection = () => {
       frame = 0;
 
-      const anchorY = window.innerHeight * activeOffset;
-      let nextActiveId = sections[0]?.id;
-      let shortestDistance = Number.POSITIVE_INFINITY;
-
-      for (const section of sections) {
-        const element = getSectionElement(section.id);
-        if (!element) continue;
-
-        const rect = element.getBoundingClientRect();
-        const containsAnchor = rect.top <= anchorY && rect.bottom >= anchorY;
-        const distance = containsAnchor
-          ? 0
-          : Math.min(Math.abs(rect.top - anchorY), Math.abs(rect.bottom - anchorY));
-
-        if (distance < shortestDistance) {
-          shortestDistance = distance;
-          nextActiveId = section.id;
-        }
-      }
+      const nextActiveId = findActiveSection(ids, activeOffset) ?? ids[0];
 
       setActiveId(nextActiveId);
 

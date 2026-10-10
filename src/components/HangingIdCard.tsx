@@ -1,6 +1,7 @@
 import { motion, useMotionValue, useTransform, useSpring } from 'motion/react';
 import { Star } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import { isTypingTarget } from '../lib/utils';
 
 // Layout constants — must match the card's CSS exactly
 const CARD_TOP = 100;          // absolute top of card within the wrapper (px)
@@ -20,6 +21,7 @@ export default function HangingIdCard() {
     ];
     let buffer: string[] = [];
     const onKeyDown = (event: KeyboardEvent) => {
+      if (isTypingTarget(event.target)) return;
       buffer.push(event.key.toLowerCase());
       buffer = buffer.slice(-sequence.length);
       if (buffer.join('|') === sequence.join('|')) {
@@ -118,7 +120,7 @@ export default function HangingIdCard() {
           dragElastic={0.15}
           dragConstraints={{ top: -60, bottom: 220, left: -200, right: 200 }}
           whileDrag={{ cursor: 'grabbing' }}
-          data-cursor="Drag Me"
+          data-cursor="Drag"
           className="absolute top-[100px] left-0 w-56 glass-pill rounded-2xl p-5 pointer-events-auto cursor-grab flex flex-col items-center gap-4 hover:border-white/[0.15] transition-colors duration-300 z-20 [perspective:900px]"
         >
           {/* Flip wrapper — Konami code reveals the secret face */}

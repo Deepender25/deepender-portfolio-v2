@@ -87,7 +87,8 @@
 
 @layer base {
   html {
-    scroll-behavior: smooth;
+    /* No CSS scroll-behavior: smooth scrolling is owned by Lenis, and
+       reduced-motion visitors get instant native scrolling */
     /* Compositor-driven smooth scroll on iOS */
     -webkit-overflow-scrolling: touch;
     /* Prevent elastic over-scroll bounce from triggering layout */
@@ -111,12 +112,14 @@
   .glass-panel {
     @apply bg-white/[0.01] backdrop-blur-md backdrop-saturate-[1.2] border border-white/[0.12] shadow-[0_8px_32px_rgba(0,0,0,0.3),inset_0_1px_2px_rgba(255,255,255,0.2),inset_0_-1px_2px_rgba(0,0,0,0.2)] transform-gpu relative;
     contain: layout style paint;
-    transition: all 0.7s cubic-bezier(0.175, 0.885, 0.32, 2.2);
+    /* Only paint properties transition — never transform/opacity, which
+       GSAP animates and a CSS transition would drag behind */
+    transition: border-color 0.3s ease, background-color 0.3s ease;
   }
 
   .glass-panel:hover {
-    transform: scale(1.02);
-    border-radius: 3rem;
+    border-color: rgb(255 255 255 / 0.2);
+    background-color: rgb(255 255 255 / 0.025);
   }
 
   .glass-panel::before {
@@ -127,8 +130,7 @@
     border-radius: inherit;
     backdrop-filter: blur(10px); 
     isolation: isolate;
-    pointer-events: none; 
-    transition: all 0.7s cubic-bezier(0.175, 0.885, 0.32, 2.2);
+    pointer-events: none;
   }
 
   .glass-panel-strong {
@@ -189,6 +191,27 @@
 
 .animation-delay-4000 {
   animation-delay: 4s;
+}
+
+/* GitHub heatmap cells — one CSS keyframe instead of hundreds of JS animations */
+@keyframes gh-cell-in {
+  from {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+}
+
+.gh-cell {
+  animation: gh-cell-in 0.2s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Respect reduced-motion: stop decorative loops and entrance keyframes */
+@media (prefers-reduced-motion: reduce) {
+  .animate-blob,
+  .animate-pulse,
+  .gh-cell {
+    animation: none;
+  }
 }
 
 /* Custom scrollbar for premium feel */
