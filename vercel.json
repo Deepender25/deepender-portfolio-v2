@@ -19,6 +19,10 @@
       "destination": "/server.js"
     },
     {
+      "source": "/work/:slug",
+      "destination": "/work/:slug/index.html"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

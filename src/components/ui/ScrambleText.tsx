@@ -65,11 +65,13 @@ export function ScrambleText({ text, delay = 0, className = "" }: ScrambleTextPr
     };
   }, [text, delay, isStatic]);
 
+  if (isStatic) return <span className={className}>{text}</span>;
+
   return (
-    <span className="relative inline-block">
-      {/* Invisible text to maintain exact final width and prevent layout shifts */}
-      <span className={`invisible ${className}`}>{text}</span>
-      {/* Absolutely positioned text */}
+    // The final text reserves the width through a CSS pseudo-element, so the
+    // word exists only once in the DOM (headings read "Deepender", not
+    // "DeependerDeepender", for search engines and screen readers).
+    <span data-text={text} className="relative inline-block whitespace-pre before:invisible before:content-[attr(data-text)]">
       <span className={`absolute top-0 left-0 whitespace-pre ${className}`}>{displayText}</span>
     </span>
   );

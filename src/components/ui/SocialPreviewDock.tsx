@@ -64,7 +64,7 @@ export function SocialPreviewDock({
   const cleanEmail = email.replace(/^mailto:/, '');
   const username = profile.username || 'Deepender25';
   const liveAvatarUrl = `https://github.com/${username}.png`;
-  const fallbackAvatarUrl = profile.avatarUrl || '/Deepender.jpg';
+  const fallbackAvatarUrl = profile.avatarUrl || '/images/deepender-avatar.jpg';
 
   const cancelClose = () => {
     if (closeTimer.current) {

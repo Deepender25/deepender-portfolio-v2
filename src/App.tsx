@@ -10,7 +10,8 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 gsap.registerPlugin(ScrollTrigger);
 import { navigate, scrollToTarget } from './utils/navigation';
-import portfolioData from './data/portfolio.json';
+import { findProject } from './seo/meta';
+import { useRouteMeta } from './seo/use-route-meta';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import About from './components/About';
@@ -85,10 +86,9 @@ export default function App() {
   const workSlug = route.startsWith('/work/')
     ? decodeURIComponent(route.slice('/work/'.length))
     : null;
-  const workProject =
-    portfolioData.projects.find(
-      (p) => p.title.toLowerCase().replace(/\s+/g, '-') === workSlug,
-    ) ?? null;
+  const workProject = workSlug ? findProject(workSlug) : null;
+
+  useRouteMeta(route);
 
   useEffect(() => {
     if (envBgType === '0-1') {

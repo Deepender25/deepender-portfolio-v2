@@ -1,0 +1,14 @@
+{
+  "url": "https://deepender.vercel.app",
+  "name": "Deepender Yadav",
+  "alternateName": "Deepender25",
+  "jobTitle": "AI/ML Engineer & Full-Stack Developer",
+  "title": "Deepender Yadav | AI/ML Engineer & Full-Stack Developer",
+  "description": "Deepender Yadav — AI/ML engineer and full-stack developer in Gurugram, India, building LLM agents, RAG pipelines and web apps with Python, Next.js and React.",
+  "locale": "en_IN",
+  "location": { "city": "Gurugram", "region": "Haryana", "country": "IN" },
+  "image": "/Deepender.jpg",
+  "ogImage": "/og-image.jpg",
+  "ogImageAlt": "Deepender Yadav — AI/ML Engineer & Full-Stack Developer",
+  "themeColor": "#030303"
+}

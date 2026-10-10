@@ -151,6 +151,7 @@
       "live": "#",
       "clip": "/videos/buddy.webm",
       "poster": "/videos/buddy.jpg",
+      "ogImage": "/videos/buddy-og.jpg",
       "icon": "Bot"
     },
     {

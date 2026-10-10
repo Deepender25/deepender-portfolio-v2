@@ -121,11 +121,13 @@ export default function Hero() {
             <div className="hero-title-1-wrapper will-change-transform">
               <h1 className="hero-title-1 text-5xl md:text-7xl lg:text-[7rem] font-display font-medium tracking-tighter leading-[1.05] will-change-transform">
                 <ScrambleText text={portfolioData.hero.titleLine1} delay={300} className="text-gradient" />
+                {/* Full name for search engines and screen readers; the visual second line is decorative */}
+                <span className="sr-only"> {portfolioData.hero.titleLine2.replace(/\.$/, '')}</span>
               </h1>
             </div>
             <div className="flex flex-col md:flex-row md:items-center gap-6 md:gap-8 mt-2">
               <div className="hero-title-2-wrapper will-change-transform">
-                <span className="block hero-title-2 text-5xl md:text-7xl lg:text-[7rem] font-display font-medium tracking-tighter leading-[1.05] italic font-light text-white/60 will-change-transform">
+                <span aria-hidden="true" className="block hero-title-2 text-5xl md:text-7xl lg:text-[7rem] font-display font-medium tracking-tighter leading-[1.05] italic font-light text-white/60 will-change-transform">
                   <ScrambleText text={portfolioData.hero.titleLine2} delay={1500} />
                 </span>
               </div>
@@ -154,7 +156,7 @@ export default function Hero() {
                       subheadline: "B.Tech CSE (AI/ML) @ Gurugram University",
                       location: "Gurugram, India",
                       bio: portfolioData.hero.description1,
-                      avatarUrl: "/Deepender.jpg",
+                      avatarUrl: "/images/deepender-avatar.jpg",
                       links: {
                         github: portfolioData.hero.social.github,
                         linkedin: portfolioData.hero.social.linkedin,

@@ -5,9 +5,9 @@ import portfolioData from '../data/portfolio.json';
 import { navigate } from '../utils/navigation';
 import { useFocusTrap } from '../lib/focus-trap';
 import { useScrollLock } from '../lib/scroll-lock';
+import { projectPath, projectSlug } from '../seo/meta';
 
 const pad = (value: number) => String(value).padStart(2, '0');
-const slugify = (title: string) => title.toLowerCase().replace(/\s+/g, '-');
 
 interface WorkPageProps {
   slug: string;
@@ -24,7 +24,7 @@ const ghostPill =
  */
 export default function WorkPage({ slug, onClose }: WorkPageProps) {
   const projects = portfolioData.projects;
-  const index = Math.max(0, projects.findIndex((p) => slugify(p.title) === slug));
+  const index = Math.max(0, projects.findIndex((p) => projectSlug(p.title) === slug));
   const project = projects[index];
   const trapRef = useFocusTrap<HTMLDivElement>(Boolean(project));
 
@@ -187,7 +187,7 @@ export default function WorkPage({ slug, onClose }: WorkPageProps) {
         <div className="mx-auto grid w-full max-w-7xl grid-cols-2 divide-x divide-white/[0.08] px-6 md:px-12">
           <button
             type="button"
-            onClick={() => navigate(`/work/${slugify(prev.title)}`)}
+            onClick={() => navigate(projectPath(prev))}
             className="group flex items-center gap-3 py-4 pr-4 text-left"
           >
             <ArrowLeft size={15} className="shrink-0 text-white/35 transition-all duration-300 group-hover:-translate-x-0.5 group-hover:text-white" />
@@ -202,7 +202,7 @@ export default function WorkPage({ slug, onClose }: WorkPageProps) {
           </button>
           <button
             type="button"
-            onClick={() => navigate(`/work/${slugify(next.title)}`)}
+            onClick={() => navigate(projectPath(next))}
             className="group flex items-center justify-end gap-3 py-4 pl-4 text-right"
           >
             <span className="min-w-0">

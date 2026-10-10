@@ -140,8 +140,8 @@ export default function HangingIdCard() {
           {/* Profile Image */}
           <div className="w-24 h-24 rounded-full bg-gradient-to-br from-white/10 to-white/5 border border-white/20 flex items-center justify-center overflow-hidden relative shadow-[0_0_15px_rgba(255,255,255,0.1)]">
             <img
-              src="/Deepender.jpg"
-              alt="Deepender Yadav Profile Portrait"
+              src="/images/deepender-avatar.jpg"
+              alt="Portrait of Deepender Yadav"
               decoding="async"
               className="w-full h-full object-cover object-top rounded-full scale-[1.1] -translate-y-1.5"
             />

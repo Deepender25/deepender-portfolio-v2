@@ -8,6 +8,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { navigate } from '../utils/navigation';
 import { useFocusTrap } from '../lib/focus-trap';
 import { useScrollLock } from '../lib/scroll-lock';
+import { projectPath } from '../seo/meta';
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 
@@ -274,11 +275,11 @@ export default function Projects() {
                 <div className="col-span-1 flex flex-col items-start gap-4 md:col-span-7 lg:pl-14 xl:pl-20">
                   <h3 className="row-reveal font-display font-medium uppercase tracking-[-0.03em] leading-none text-[clamp(1.9rem,3.6vw,3.4rem)]">
                     <a
-                      href={`/work/${project.title.toLowerCase().replace(/\s+/g, '-')}`}
+                      href={projectPath(project)}
                       data-cursor="Case study"
                       onClick={(event) => {
                         event.preventDefault();
-                        navigate(`/work/${project.title.toLowerCase().replace(/\s+/g, '-')}`);
+                        navigate(projectPath(project));
                       }}
                       className="inline-block text-white transition-transform duration-300 ease-out group-hover:translate-x-1 hover:text-white/90 focus-visible:outline-none"
                     >
@@ -351,7 +352,7 @@ export default function Projects() {
                   className="group/media relative col-span-1 block aspect-video w-full cursor-pointer overflow-hidden rounded-2xl border border-white/[0.08] bg-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white/40 md:col-span-5"
                 >
                   <div className="absolute inset-0 transition-transform duration-[600ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover/media:scale-[1.02]">
-                    <Cover sources={coverSources} alt={`${project.title} cover`} />
+                    <Cover sources={coverSources} alt={`${project.title} — ${project.category ?? project.tech[0]} project preview`} />
 
                     {hasClip && streaming.has(index) && (
                       portrait.has(index) ? (

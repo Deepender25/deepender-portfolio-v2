@@ -734,7 +734,7 @@ export const GitHubActivity = ({
             <img
               src={avatarUrl}
               onError={(e) => {
-                e.currentTarget.src = '/Deepender.jpg';
+                e.currentTarget.src = '/images/deepender-avatar.jpg';
               }}
               alt={username}
               className="size-8 rounded-full object-cover object-top bg-zinc-800"
