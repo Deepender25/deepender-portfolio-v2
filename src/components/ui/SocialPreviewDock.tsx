@@ -50,7 +50,12 @@ export function SocialPreviewDock({
 }: SocialPreviewDockProps) {
   const [activeTab, setActiveTab] = useState<ActiveTab>(null);
   const [copied, setCopied] = useState(false);
-  const timeoutRef = useRef<number | null>(null);
+  const closeTimer = useRef<number | null>(null);
+  /* How the popover was opened: pointer-opened popovers follow the pointer,
+     keyboard-opened ones follow focus */
+  const openedBy = useRef<'pointer' | 'focus'>('pointer');
+  /* Last known pointer position — survives the listener re-subscribing on tab switch */
+  const pointer = useRef<{ x: number; y: number } | null>(null);
   const dockRef = useRef<HTMLDivElement>(null);
   const iconRefs = useRef(new Map<Exclude<ActiveTab, null>, HTMLElement>());
   /* Horizontal distance from the dock's centre to the active icon's centre */
@@ -61,23 +66,36 @@ export function SocialPreviewDock({
   const liveAvatarUrl = `https://github.com/${username}.png`;
   const fallbackAvatarUrl = profile.avatarUrl || '/Deepender.jpg';
 
-  const handleMouseEnter = (tab: ActiveTab) => {
-    if (timeoutRef.current) {
-      window.clearTimeout(timeoutRef.current);
-      timeoutRef.current = null;
+  const cancelClose = () => {
+    if (closeTimer.current) {
+      window.clearTimeout(closeTimer.current);
+      closeTimer.current = null;
     }
+  };
+
+  /* At most one pending close — a second request never orphans the first */
+  const scheduleClose = () => {
+    if (closeTimer.current) return;
+    closeTimer.current = window.setTimeout(() => {
+      closeTimer.current = null;
+      setActiveTab(null);
+    }, 150);
+  };
+
+  const closeNow = () => {
+    cancelClose();
+    setActiveTab(null);
+  };
+
+  const open = (tab: Exclude<ActiveTab, null>, source: 'pointer' | 'focus') => {
+    cancelClose();
+    openedBy.current = source;
     const dock = dockRef.current?.getBoundingClientRect();
-    const icon = tab ? iconRefs.current.get(tab)?.getBoundingClientRect() : undefined;
+    const icon = iconRefs.current.get(tab)?.getBoundingClientRect();
     if (dock && icon) {
       setArrowOffset(icon.left + icon.width / 2 - (dock.left + dock.width / 2));
     }
     setActiveTab(tab);
-  };
-
-  const handleMouseLeave = () => {
-    timeoutRef.current = window.setTimeout(() => {
-      setActiveTab(null);
-    }, 150);
   };
 
   const copyEmail = async (e: MouseEvent) => {
@@ -92,11 +110,59 @@ export function SocialPreviewDock({
     }
   };
 
+  useEffect(() => cancelClose, []);
+
+  /* While open, watch for every way the pointer can stop being over the dock
+     without a mouseleave: scrolling it away, leaving or minimising the window,
+     switching tabs, or tapping elsewhere on touch screens. */
   useEffect(() => {
-    return () => {
-      if (timeoutRef.current) window.clearTimeout(timeoutRef.current);
+    if (!activeTab) return;
+    const dock = dockRef.current;
+    if (!dock) return;
+
+    const isInside = (node: EventTarget | null) => node instanceof Node && dock.contains(node);
+
+    const onPointerMove = (event: PointerEvent) => {
+      pointer.current = { x: event.clientX, y: event.clientY };
+      if (openedBy.current !== 'pointer') return;
+      if (isInside(event.target)) cancelClose();
+      else scheduleClose();
     };
-  }, []);
+    const onScroll = () => {
+      const at = pointer.current;
+      if (openedBy.current !== 'pointer' || !at) return;
+      if (!isInside(document.elementFromPoint(at.x, at.y))) scheduleClose();
+    };
+    const onPointerDown = (event: PointerEvent) => {
+      if (!isInside(event.target)) closeNow();
+    };
+    const onWindowOut = (event: MouseEvent) => {
+      if (!event.relatedTarget && openedBy.current === 'pointer') closeNow();
+    };
+    const onHidden = () => {
+      if (document.hidden) closeNow();
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') closeNow();
+    };
+
+    document.addEventListener('pointermove', onPointerMove, { passive: true });
+    window.addEventListener('scroll', onScroll, { passive: true });
+    document.addEventListener('pointerdown', onPointerDown);
+    document.addEventListener('mouseout', onWindowOut);
+    window.addEventListener('blur', closeNow);
+    document.addEventListener('visibilitychange', onHidden);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('pointermove', onPointerMove);
+      window.removeEventListener('scroll', onScroll);
+      document.removeEventListener('pointerdown', onPointerDown);
+      document.removeEventListener('mouseout', onWindowOut);
+      window.removeEventListener('blur', closeNow);
+      document.removeEventListener('visibilitychange', onHidden);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [activeTab]);
 
   const items = [
     {
@@ -128,7 +194,9 @@ export function SocialPreviewDock({
     <div
       ref={dockRef}
       className={`relative inline-flex items-center ${className}`}
-      onMouseLeave={handleMouseLeave}
+      onMouseLeave={() => {
+        if (openedBy.current === 'pointer') scheduleClose();
+      }}
     >
       {/* ── Popover Preview Card ─────────────────────────────────────── */}
       <AnimatePresence>
@@ -141,10 +209,11 @@ export function SocialPreviewDock({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 4 }}
             transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
-            onMouseEnter={() => handleMouseEnter(activeTab)}
-            onMouseLeave={handleMouseLeave}
-            className="absolute bottom-full mb-3.5 left-1/2 -translate-x-1/2 z-50 pointer-events-auto"
+            /* Bottom padding (not margin) bridges the gap above the icons, so the
+               pointer never "leaves" the dock on its way up to the card */
+            className="absolute bottom-full pb-3.5 left-1/2 -translate-x-1/2 z-50"
           >
+            <div className="relative">
             <AnimatePresence mode="popLayout" initial={false}>
             <motion.div
               key={activeTab}
@@ -250,6 +319,7 @@ export function SocialPreviewDock({
             >
               <div className="h-full w-full rotate-45 border-r border-b border-white/[0.12] bg-[#0c0c0e]" />
             </motion.div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -268,14 +338,27 @@ export function SocialPreviewDock({
                 else iconRefs.current.delete(item.id);
               }}
               className="relative"
-              onMouseEnter={() => handleMouseEnter(item.id)}
+              onMouseEnter={(event: MouseEvent) => {
+                pointer.current = { x: event.clientX, y: event.clientY };
+                open(item.id, 'pointer');
+              }}
             >
               <a
                 href={item.href}
                 target={item.id === 'email' ? undefined : '_blank'}
                 rel={item.id === 'email' ? undefined : 'noreferrer'}
-                onFocus={() => handleMouseEnter(item.id)}
-                onBlur={handleMouseLeave}
+                onFocus={(event) => {
+                  // Keyboard focus only. Mouse clicks also focus the link, and the
+                  // browser re-focuses it when the window is restored — neither
+                  // should pop the card open with no pointer over it.
+                  if (event.currentTarget.matches(':focus-visible')) open(item.id, 'focus');
+                }}
+                onBlur={(event) => {
+                  // Tabbing between icons or into the card keeps it open
+                  const next = event.relatedTarget;
+                  const stillInside = next instanceof Node && dockRef.current?.contains(next);
+                  if (openedBy.current === 'focus' && !stillInside) scheduleClose();
+                }}
                 className={`relative flex items-center justify-center p-3 md:p-3.5 rounded-full transition-all duration-300 border ${
                   isActive
                     ? 'bg-white text-black border-white scale-110 shadow-[0_0_20px_rgba(255,255,255,0.35)]'
